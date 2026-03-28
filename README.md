@@ -12,7 +12,7 @@ AuthKit-Lite helps you quickly add secure authentication to your backend without
 
 ## 🚀 Features
 
-* 🔑 JWT-based authentication (stateless & scalable) ([OneUptime][1])
+* 🔑 JWT-based authentication (stateless & scalable)
 * 👤 User signup & login APIs
 * 🔒 Secure password hashing
 * 🛡️ Role-based access control (RBAC)
