@@ -7,6 +7,7 @@ AuthKit-Lite helps you quickly add secure authentication to your backend without
 
 👉 Full details: [https://buildbasekit.com/boilerplates/authkit/](https://buildbasekit.com/boilerplates/authkit/)
 
+
 ---
 
 ## 🚀 Features
@@ -33,17 +34,15 @@ AuthKit-Lite helps you quickly add secure authentication to your backend without
 ## 📦 Project Structure
 
 ```
-authkit-lite/
-├── src/main/java/com/authkit
-│   ├── config/        # Security & JWT config
-│   ├── controller/    # Auth APIs
-│   ├── service/       # Business logic
-│   ├── repository/    # Data access layer
-│   ├── model/         # Entities
-│   └── security/      # JWT filters & utils
-├── src/main/resources/
-│   └── application.properties
-├── pom.xml
+src/main/java/com/authkit/
+├── config/        # App configurations
+├── controllers/   # REST API endpoints
+├── dtos/          # Data Transfer Objects
+├── entities/      # Database models
+├── exceptions/    # Global error handling
+├── repositories/  # Database access
+├── security/      # Spring Security & JWT logic
+└── services/      # Business logic
 ```
 
 ## 🎯 Who is it for?
