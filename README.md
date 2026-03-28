@@ -5,7 +5,7 @@
 A lightweight and ready-to-use authentication boilerplate built with **Spring Boot + JWT**.
 AuthKit-Lite helps you quickly add secure authentication to your backend without reinventing the wheel.
 
-👉 Full details: [https://buildbasekit.com/boilerplates/authkit/](https://buildbasekit.com/boilerplates/authkit/)
+👉 Full details: [https://buildbasekit.com/boilerplates/authkit-lite/](https://buildbasekit.com/boilerplates/authkit-lite/)
 
 
 ---
