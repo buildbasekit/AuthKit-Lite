@@ -43,10 +43,6 @@ public class RefreshTokenService {
 		return token.getExpiryDate().isBefore(Instant.now());
 	}
 
-	public void deleteByUser(User user) {
-		refreshTokenRepository.deleteByUser(user);
-	}
-
 	public RefreshToken findByToken(String token) {
 		return refreshTokenRepository.findByToken(token)
 				.orElseThrow(() -> new RefreshTokenException("Refresh token not found"));
@@ -57,7 +53,7 @@ public class RefreshTokenService {
 		RefreshToken token = findByToken(requestRefreshToken);
 
 		if (isExpired(token)) {
-			deleteByUser(token.getUser());
+			refreshTokenRepository.delete(token);
 			throw new RefreshTokenException("Refresh token expired, login again");
 		}
 
@@ -68,6 +64,6 @@ public class RefreshTokenService {
 	// Handle logout flow
 	public void logout(String requestRefreshToken) {
 		RefreshToken token = findByToken(requestRefreshToken);
-		deleteByUser(token.getUser());
+		refreshTokenRepository.delete(token);
 	}
 }

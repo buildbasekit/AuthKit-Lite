@@ -47,9 +47,14 @@ public class AuthController {
 
 	@PostMapping("/logout")
 	public ResponseEntity<?> logout(@RequestBody Map<String, String> body) {
-		String requestRefreshToken = body.get("refreshToken");
-		refreshTokenService.logout(requestRefreshToken);
-		return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
+		try {
+			String requestRefreshToken = body.get("refreshToken");
+			refreshTokenService.logout(requestRefreshToken);
+			return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
+		}catch(Exception ex) {
+			ex.printStackTrace();
+			return null;
+		}
 	}
 
 }

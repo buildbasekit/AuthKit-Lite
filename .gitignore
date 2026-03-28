@@ -1,0 +1,118 @@
+# =========================
+
+# Java / Spring Boot
+
+# =========================
+
+target/
+build/
+out/
+*.class
+*.log
+
+# Maven
+
+.mvn/
+!/.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.properties
+
+# Gradle
+
+.gradle/
+build/
+
+# =========================
+
+# Eclipse IDE
+
+# =========================
+
+.metadata/
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+
+# Eclipse project files
+
+.project
+.classpath
+.factorypath
+.settings/
+
+# =========================
+
+# IntelliJ (if opened accidentally)
+
+# =========================
+
+.idea/
+*.iml
+
+# =========================
+
+# VS Code (optional)
+
+# =========================
+
+.vscode/
+
+# =========================
+
+# OS Files
+
+# =========================
+
+.DS_Store
+Thumbs.db
+
+# =========================
+
+# Logs
+
+# =========================
+
+logs/
+*.log
+
+# =========================
+
+# Environment / Secrets
+
+# =========================
+
+.env
+.env.*
+application-local.properties
+application-dev.properties
+application-prod.properties
+
+# =========================
+
+# Node (if frontend exists)
+
+# =========================
+
+node_modules/
+
+# =========================
+
+# Coverage / Reports
+
+# =========================
+
+coverage/
+*.lcov
+
+# =========================
+
+# Misc
+
+# =========================
+
+*.jar
+*.war
+*.ear

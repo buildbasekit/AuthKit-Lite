@@ -1,0 +1,434 @@
+{
+  "info": {
+    "_postman_id": "5078d241-15fa-4fc7-b988-090f40cb081c",
+    "name": "Auth-Kit API Collection",
+    "description": "## 🔐 Auth Kit API Collection — BuildBaseKit\n\nThis collection showcases a complete **JWT-based authentication and role-based authorization system** built with Spring Boot.\n\nDesigned for developers who want a **production-ready auth flow** without reinventing the wheel.\n\n---\n\n## ⚡ What’s Included\n\n- User Registration & Login\n    \n- Access & Refresh Token handling\n    \n- Token Refresh & Logout\n    \n- Protected endpoints\n    \n- Role-based access (User / Admin)\n    \n\n---\n\n## 🚀 Quick Flow\n\n1. Register → `/auth/register`\n    \n2. Login → `/auth/login` (tokens auto-saved)\n    \n3. Access protected routes using `access_token`\n    \n4. Refresh token → `/auth/refresh`\n    \n5. Logout → `/auth/logout`\n    \n\n---\n\n## 🔑 Setup\n\n- Set `base_url` → `http://localhost:8080`\n    \n- Tokens are automatically managed via scripts\n    \n\n---\n\n## 🌐 BuildBaseKit\n\nThis collection is part of **BuildBaseKit** — production-ready backend boilerplates.\n\n👉 [https://buildbasekit.com](https://buildbasekit.com/)\n\n---\n\nRun requests in sequence for best experience.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "47320634",
+    "_collection_link": "https://go.postman.co/collection/47320634-5078d241-15fa-4fc7-b988-090f40cb081c?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "AUTH",
+      "item": [
+        {
+          "name": "Auth | Login [POST]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "// Set access token\r",
+                  "if (json.accessToken) {\r",
+                  "    pm.environment.set(\"access_token\", json.accessToken);\r",
+                  "} else {\r",
+                  "    console.error(\"No accessToken found in response\");\r",
+                  "}\r",
+                  "\r",
+                  "// Set refresh token\r",
+                  "if (json.refreshToken) {\r",
+                  "    pm.environment.set(\"refresh_token\", json.refreshToken);\r",
+                  "} else {\r",
+                  "    console.error(\"No refreshToken found in response\");\r",
+                  "}\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"username\":\"admin\",\r\n    \"password\":\"admin123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Auth | Refresh Token [POST]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"refreshToken\": \"{{refresh_token}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/refresh",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "refresh"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Auth | Logout [POST]",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.environment.unset(\"access_token\"); \r",
+                  "pm.environment.unset(\"refresh_token\");"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"refreshToken\": \"{{refresh_token}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Auth | Register [POST]",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"username\":\"boiler_agents\",\r\n    \"email\":\"boileragents@gmail.com\",\r\n    \"password\":\"0000\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "USER",
+      "item": [
+        {
+          "name": "Users | Me [GET]",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Users | Profile [GET]",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "profile"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Users | Restricted [GET]",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/restricted",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "restricted"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "ADMIN",
+      "item": [
+        {
+          "name": "Users | List All [GET] (Admin)",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/all",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "all"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Users | Admin-only [GET] (Admin)",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/admin-only",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "admin-only"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": ""
+    },
+    {
+      "key": "access_token",
+      "value": ""
+    },
+    {
+      "key": "refresh_token",
+      "value": ""
+    }
+  ]
+}
