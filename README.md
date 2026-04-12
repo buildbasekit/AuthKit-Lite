@@ -1,76 +1,78 @@
 # AuthKit-Lite 🔐
 
-**Minimal Spring Boot JWT Authentication Boilerplate**
+Minimal Spring Boot JWT authentication boilerplate to add secure login and RBAC in minutes.
 
-A lightweight and ready-to-use authentication boilerplate built with **Spring Boot + JWT**.
-AuthKit-Lite helps you quickly add secure authentication to your backend without reinventing the wheel.
+👉 Get full details & documentation: https://buildbasekit.com/boilerplates/authkit-lite/  
+⭐ Star this repo if it saves you time
 
-👉 Full details: [https://buildbasekit.com/boilerplates/authkit-lite/](https://buildbasekit.com/boilerplates/authkit-lite/)
+---
 
+## ❌ The Problem
+
+Setting up authentication in Spring Boot usually means:
+- writing JWT logic from scratch  
+- configuring Spring Security manually  
+- repeating the same setup in every project  
+
+---
+
+## ✅ The Solution
+
+AuthKit-Lite gives you a ready-to-use authentication system with JWT, RBAC, and clean structure so you can start building features immediately.
+
+---
+
+## ⚡ Quick Start
+
+### 1. Clone the repository
+Download or clone the project from GitHub.
+
+```bash
+git clone https://github.com/buildbasekit/AuthKit-Lite
+cd AuthKit-Lite
+````
+
+### 2. Configure environment
+
+Set database and JWT properties in `application.properties`.
+
+### 3. Run the application
+
+Start the Spring Boot app and begin testing APIs with **provided Postman collection**.
 
 ---
 
 ## 🚀 Features
 
-* 🔑 JWT-based authentication (stateless & scalable)
-* 👤 User signup & login APIs
-* 🔒 Secure password hashing
-* 🛡️ Role-based access control (RBAC)
-* ⚡ Clean and minimal project structure
-* 🔄 Ready for extension (refresh tokens, OAuth, etc.)
+* JWT authentication (stateless, refresh tokens)
+* User signup & login APIs
+* Secure password hashing
+* Role-based access control (RBAC)
+* Clean and minimal project structure
 
 ---
 
-## 🧰 Tech Stack
+## 🎯 Use Cases
 
-* Java 21
-* Spring Boot 3
-* Spring Security
-* JWT (JSON Web Token)
-* Maven
-
----
-
-## 📦 Project Structure
-
-```
-src/main/java/com/authkit/
-├── config/        # App configurations
-├── controllers/   # REST API endpoints
-├── dtos/          # Data Transfer Objects
-├── entities/      # Database models
-├── exceptions/    # Global error handling
-├── repositories/  # Database access
-├── security/      # Spring Security & JWT logic
-└── services/      # Business logic
-```
-
-## 🎯 Who is it for?
-
-* 🚀 Developers building MVPs who need quick authentication setup
-* 🧑‍💻 Indie hackers shipping SaaS products fast
-* 🏗️ Backend developers starting new Spring Boot projects
-* 📚 Students learning JWT authentication with real-world structure
-* 🔌 Developers who want a plug-and-play auth system
-* ⚡ Teams that don’t want to build auth from scratch every time
-* 🧪 Developers prototyping APIs with secure endpoints
+* SaaS authentication systems
+* Admin dashboards
+* Secure REST APIs
+* Backend starter projects
 
 ---
 
-## ⭐ Support
+## 🚀 Need a Production-Ready Backend?
 
-If this helped you:
+Get a complete backend with:
 
-* Give it a ⭐ on GitHub
-* Share with other devs
+- Authentication  
+- File storage (S3)  
+- Clean architecture  
+
+👉 FiloraFS-Pro  
+[https://buildbasekit.gumroad.com/l/filorafs-pro-self-hosted-file-storage](https://buildbasekit.gumroad.com/l/filorafs-pro-self-hosted-file-storage)
 
 ---
 
-## 🔗 About BuildBaseKit
-
-We build **production-ready starter kits** so you can skip setup and ship faster.
-
-🌐 [https://buildbasekit.com](https://buildbasekit.com)
-
-For special requirements:
-📩 **[hello@buildbasekit.com](mailto:hello@buildbasekit.com)**
+Built by BuildBaseKit
+[https://buildbasekit.com](https://buildbasekit.com)
