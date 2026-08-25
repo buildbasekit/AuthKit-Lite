@@ -31,6 +31,7 @@ function initializeConsole() {
     credentialId: document.getElementById("credential-id"),
     results: document.getElementById("results"),
     runnerStatus: document.getElementById("runner-status"),
+    themeToggle: document.getElementById("theme-toggle"),
     warning: document.getElementById("environment-warning"),
     stateUserToken: document.getElementById("state-user-token"),
     stateRefreshToken: document.getElementById("state-refresh-token"),
@@ -51,6 +52,7 @@ function initializeConsole() {
   };
 
   elements.baseUrl.value = window.location.origin;
+  initializeTheme();
   setNewIdentity();
   updateEnvironmentMessage();
   updateState();
@@ -94,6 +96,23 @@ function initializeConsole() {
     updateEnvironmentMessage();
   });
 
+  elements.themeToggle.addEventListener("click", toggleTheme);
+
+  function initializeTheme() {
+    const prefersLight = window.matchMedia?.("(prefers-color-scheme: light)").matches;
+    setTheme(prefersLight ? "light" : "dark");
+  }
+
+  function toggleTheme() {
+    setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
+  }
+
+  function setTheme(theme) {
+    document.documentElement.dataset.theme = theme;
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    elements.themeToggle.setAttribute("aria-label", `Switch to ${nextTheme} theme`);
+  }
+
   async function executeAction(button, action) {
     setRunning(true, button.textContent.trim());
     try {
@@ -114,7 +133,9 @@ function initializeConsole() {
   }
 
   function setRunnerStatus(message, type = "") {
-    elements.runnerStatus.textContent = message;
+    const indicator = document.createElement("i");
+    indicator.setAttribute("aria-hidden", "true");
+    elements.runnerStatus.replaceChildren(indicator, document.createTextNode(message));
     elements.runnerStatus.className = `runner-status ${type}`.trim();
   }
 
@@ -156,7 +177,12 @@ function initializeConsole() {
   }
 
   function clearResults() {
-    elements.results.innerHTML = '<li class="empty-result">Choose an endpoint above or run a combined journey.</li>';
+    elements.results.innerHTML = `
+      <li class="empty-result">
+        <span class="terminal-mark" aria-hidden="true">&gt;_</span>
+        <strong>No requests yet</strong>
+        <p>Choose an endpoint or run a complete journey to inspect status, timing, and sanitized response data.</p>
+      </li>`;
   }
 
   function updateEnvironmentMessage() {
@@ -239,11 +265,19 @@ function initializeConsole() {
 
   function addResult(result) {
     elements.results.querySelector(".empty-result")?.remove();
+    elements.results.querySelectorAll(".result-item.expanded").forEach((expandedItem) => {
+      expandedItem.classList.remove("expanded");
+      expandedItem.querySelector(".result-summary")?.setAttribute("aria-expanded", "false");
+      const expandedBody = expandedItem.querySelector(".result-body");
+      if (expandedBody) expandedBody.hidden = true;
+    });
     const item = document.createElement("li");
-    item.className = `result-item ${result.ok ? "ok" : "error"}`;
-    const summary = document.createElement("div");
+    item.className = `result-item expanded ${result.ok ? "ok" : "error"}`;
+    const summary = document.createElement("button");
+    summary.type = "button";
     summary.className = "result-summary";
-    summary.innerHTML = `<span class="result-status"></span><span class="result-method"></span><span class="result-label"></span><span class="result-time"></span>`;
+    summary.setAttribute("aria-expanded", "true");
+    summary.innerHTML = `<span class="result-status"></span><span class="result-method"></span><span class="result-label"></span><span class="result-time"></span><span class="result-chevron" aria-hidden="true">›</span>`;
     summary.querySelector(".result-status").textContent = String(result.status);
     summary.querySelector(".result-method").textContent = result.method;
     summary.querySelector(".result-label").textContent = `${result.label} · ${result.path}`;
@@ -251,6 +285,11 @@ function initializeConsole() {
     const body = document.createElement("pre");
     body.className = "result-body";
     body.textContent = typeof result.body === "string" ? result.body : JSON.stringify(result.body, null, 2);
+    summary.addEventListener("click", () => {
+      const expanded = item.classList.toggle("expanded");
+      summary.setAttribute("aria-expanded", String(expanded));
+      body.hidden = !expanded;
+    });
     item.append(summary, body);
     elements.results.prepend(item);
   }
@@ -415,6 +454,9 @@ function initializeConsole() {
     await ensureCsrf();
     state.authenticationOptions = await request("Passkey authentication options", "/webauthn/authenticate/options", {
       method: "POST",
+      // Scope the developer-console ceremony to the current user when a JWT is
+      // available. The endpoint remains public for real passwordless login.
+      token: state.userAccessToken || undefined,
       csrfToken: state.csrfToken
     });
     return state.authenticationOptions;
@@ -422,20 +464,25 @@ function initializeConsole() {
 
   async function loginWithPasskey() {
     assertWebAuthnAvailable();
-    if (!state.authenticationOptions) await authenticationOptions();
-    const publicKey = parseRequestOptions(state.authenticationOptions);
-    const credential = await navigator.credentials.get({ publicKey });
-    if (!credential) throw new Error("The authenticator did not return an assertion.");
-    const body = await request("Complete passkey authentication", "/login/webauthn", {
-      method: "POST",
-      csrfToken: state.csrfToken,
-      body: credentialToJson(credential)
-    });
-    saveUserTokens(body);
-    state.authenticationOptions = null;
-    state.csrfToken = "";
-    updateState();
-    return body;
+    // Spring Security stores request options as one-time session state and
+    // consumes them on an assertion attempt, including a failed attempt.
+    const options = await authenticationOptions();
+    try {
+      const publicKey = parseRequestOptions(options);
+      const credential = await navigator.credentials.get({ publicKey });
+      if (!credential) throw new Error("The authenticator did not return an assertion.");
+      const body = await request("Complete passkey authentication", "/login/webauthn", {
+        method: "POST",
+        csrfToken: state.csrfToken,
+        body: credentialToJson(credential)
+      });
+      saveUserTokens(body);
+      state.csrfToken = "";
+      updateState();
+      return body;
+    } finally {
+      state.authenticationOptions = null;
+    }
   }
 
   async function deletePasskey() {
@@ -559,7 +606,6 @@ function initializeConsole() {
     await acquireCsrf();
     await registrationOptions();
     await registerPasskey();
-    await authenticationOptions();
     await loginWithPasskey();
     await request("Profile after passkey login", "/api/users/me", { token: state.userAccessToken });
     await listPasskeys();

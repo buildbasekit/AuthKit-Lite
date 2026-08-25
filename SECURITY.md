@@ -32,11 +32,12 @@ This document outlines the security architecture and guarantees of AuthKit-Lite.
 
 ## Browser API Test Console
 
+- All API testing frontend files are isolated in `src/main/resources/static/api-test/`. When adopting AuthKit-Lite for another project, delete that entire directory before deployment so the developer console cannot be exposed or misused. Remove or update its static-resource assertions in `OperationalEndpointTest` as part of the same cleanup.
 - `/api-test/**` contains public static development assets only. It does not make any protected API or WebAuthn operation public; the normal JWT, role, CSRF, session, RP ID, origin, and credential-ownership checks still apply.
 - The console stores access and refresh tokens only in JavaScript memory. It does not write them to local storage, session storage, cookies, URLs, or logs, and response rendering redacts token values.
 - The console loads no remote JavaScript and sends requests only to the base URL selected by the user. Use it with local/demo accounts, not production credentials.
 - WebAuthn runs from the application-hosted `http://localhost:8080` origin. The local `file://` copy redirects there because opaque file origins are not valid relying-party origins.
-- Remove or separately restrict `/api-test/**` when deploying environments that should not expose developer tooling.
+- Deleting the self-contained `api-test` directory is the recommended production cleanup; separately restrict `/api-test/**` if the console must remain available in a controlled environment.
 
 ## Rate Limiting & Brute Force Protection (Deployment Responsibility)
 AuthKit-Lite focuses purely on standard token-based authentication. **It does not implement application-level distributed rate limiting.**

@@ -1,156 +1,216 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light dark">
-  <title>AuthKit-Lite Browser API Tester</title>
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="A dependency-free browser workspace for testing AuthKit-Lite APIs, JWT flows, authorization, and passkeys.">
+  <title>AuthKit-Lite API Test Console</title>
   <link rel="stylesheet" href="styles.css">
   <script src="app.js" defer></script>
 </head>
 <body>
   <div id="file-launcher" class="launcher" hidden>
     <div class="launcher-card">
-      <p class="eyebrow">AuthKit-Lite</p>
-      <h1>Opening the browser test console…</h1>
+      <span class="brand-mark large" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <p class="eyebrow">AuthKit-Lite / Browser workspace</p>
+      <h1>Opening the API console<span class="accent-dot">.</span></h1>
       <p>Passkeys require an HTTP origin. Keep AuthKit-Lite running on port 8080 and this file will open its server-hosted copy.</p>
-      <a class="button primary" href="http://localhost:8080/api-test/index.html">Open test console</a>
+      <a class="button primary" href="http://localhost:8080/api-test/index.html">Open API console <span aria-hidden="true">→</span></a>
       <p id="launcher-status" class="muted">Checking http://localhost:8080…</p>
     </div>
   </div>
 
   <div id="app" class="app-shell">
-    <header class="hero">
-      <div>
-        <p class="eyebrow">Zero-build browser client</p>
-        <h1>AuthKit-Lite API Test Console</h1>
-        <p class="hero-copy">Test each endpoint independently or run a complete JWT + passkey journey using your browser's real authenticator.</p>
-      </div>
-      <div class="hero-actions">
-        <button class="button primary" data-action="run-full">Run complete browser journey</button>
-        <button class="button secondary" data-action="run-core">Run core API journey</button>
+    <header class="topbar">
+      <a class="brand" href="#workspace" aria-label="AuthKit-Lite API Console home">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span><strong>AuthKit</strong><em>/ API Console</em></span>
+      </a>
+      <div class="topbar-meta">
+        <span class="connection-status"><i aria-hidden="true"></i> Local workspace</span>
+        <span class="version-tag">v1</span>
+        <button id="theme-toggle" class="icon-button" type="button" aria-label="Switch to light theme" title="Switch color theme">
+          <svg class="theme-icon theme-icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42"></path></svg>
+          <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.6 14.3A8.8 8.8 0 0 1 9.7 3.4 8.8 8.8 0 1 0 20.6 14.3Z"></path></svg>
+        </button>
       </div>
     </header>
 
-    <div id="environment-warning" class="notice warning" hidden></div>
-
-    <section class="panel setup-panel" aria-labelledby="setup-title">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">Step 1</p>
-          <h2 id="setup-title">Test settings</h2>
-        </div>
-        <button class="button ghost" data-action="reset">New test identity</button>
+    <section class="hero" aria-labelledby="page-title">
+      <div class="hero-copy-block">
+        <p class="eyebrow">Developer tools / Authentication</p>
+        <h1 id="page-title">Test every auth path.<br><span>Trust every response.</span></h1>
+        <p class="hero-copy">A focused browser workspace for validating JWT, role-based access, refresh rotation, and real passkey ceremonies against your running AuthKit-Lite API.</p>
       </div>
-      <div class="form-grid">
-        <label>API base URL
-          <input id="base-url" type="url" autocomplete="url" spellcheck="false">
-        </label>
-        <label>Passkey label
-          <input id="passkey-label" type="text" value="Browser test passkey" maxlength="100">
-        </label>
-        <label>Username
-          <input id="username" type="text" autocomplete="username" maxlength="50">
-        </label>
-        <label>Email
-          <input id="email" type="email" autocomplete="email">
-        </label>
-        <label>Password
-          <input id="password" type="password" value="Password123!" autocomplete="new-password">
-        </label>
-        <label>Credential ID
-          <input id="credential-id" type="text" placeholder="Filled after listing passkeys" spellcheck="false">
-        </label>
-        <label>Dev admin username
-          <input id="admin-username" type="text" value="admin" autocomplete="username">
-        </label>
-        <label>Dev admin password
-          <input id="admin-password" type="password" value="password123123" autocomplete="current-password">
-        </label>
+      <div class="hero-actions">
+        <button class="button primary" data-action="run-full"><span class="button-icon" aria-hidden="true">▶</span> Run complete journey</button>
+        <button class="button secondary" data-action="run-core"><span class="button-icon" aria-hidden="true">⌁</span> Run core API</button>
       </div>
-      <div class="state-strip" aria-label="Runtime state">
-        <span id="state-user-token" class="state-chip">User token: empty</span>
-        <span id="state-refresh-token" class="state-chip">Refresh token: empty</span>
-        <span id="state-admin-token" class="state-chip">Admin token: empty</span>
-        <span id="state-csrf" class="state-chip">CSRF/session: empty</span>
-        <span id="state-passkey" class="state-chip">Passkey: unknown</span>
-      </div>
-      <p class="muted compact">Tokens stay only in this page's memory and are cleared when the tab closes or you create a new test identity.</p>
     </section>
 
-    <main class="endpoint-grid">
-      <section class="panel endpoint-card">
-        <div class="card-heading">
-          <span class="method get">GET</span>
-          <div><h2>Operations</h2><p>Public application status endpoints.</p></div>
-        </div>
-        <div class="button-list">
-          <button class="request-button" data-action="actuator"><code>/actuator</code><span>Discovery links</span></button>
-          <button class="request-button" data-action="health"><code>/actuator/health</code><span>Health status</span></button>
-          <button class="request-button" data-action="info"><code>/actuator/info</code><span>Application info</span></button>
-        </div>
-      </section>
+    <div id="environment-warning" class="notice warning global-notice" role="status" hidden></div>
 
-      <section class="panel endpoint-card">
-        <div class="card-heading">
-          <span class="method post">POST</span>
-          <div><h2>Password authentication</h2><p>Registration, JWT login, refresh rotation, and logout.</p></div>
+    <div id="workspace" class="workbench">
+      <aside class="panel settings-panel" aria-labelledby="setup-title">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Environment</p>
+            <h2 id="setup-title">Request context</h2>
+          </div>
+          <button class="text-button" data-action="reset">Reset</button>
         </div>
-        <div class="button-list">
-          <button class="request-button" data-action="register"><code>/api/auth/register</code><span>Register current identity</span></button>
-          <button class="request-button" data-action="login"><code>/api/auth/login</code><span>Login and save user tokens</span></button>
-          <button class="request-button" data-action="refresh"><code>/api/auth/refresh</code><span>Rotate saved refresh token</span></button>
-          <button class="request-button" data-action="logout"><code>/api/auth/logout</code><span>Revoke user refresh token</span></button>
-          <button class="request-button" data-action="admin-login"><code>/api/auth/login</code><span>Login seeded development admin</span></button>
-        </div>
-      </section>
 
-      <section class="panel endpoint-card">
-        <div class="card-heading">
-          <span class="method get">GET</span>
-          <div><h2>Users and authorization</h2><p>Bearer-protected user and administrator endpoints.</p></div>
+        <div class="settings-group">
+          <p class="group-label"><span>01</span> Connection</p>
+          <label>API base URL
+            <input id="base-url" type="url" autocomplete="url" spellcheck="false">
+          </label>
         </div>
-        <div class="button-list">
-          <button class="request-button" data-action="profile"><code>/api/users/me</code><span>Current user profile</span></button>
-          <button class="request-button" data-action="passkey-list"><code>/api/users/me/passkeys</code><span>List and select passkeys</span></button>
-          <button class="request-button" data-action="admin-users"><code>/api/users?page=0&amp;size=20</code><span>Admin-only user list</span></button>
-          <button class="request-button expected" data-action="admin-denied"><code>/api/users</code><span>Expect 403 with normal user</span></button>
-          <button class="request-button expected" data-action="anonymous-denied"><code>/api/users/me</code><span>Expect 401 without JWT</span></button>
-        </div>
-      </section>
 
-      <section class="panel endpoint-card passkey-card">
-        <div class="card-heading">
-          <span class="method passkey">KEY</span>
-          <div><h2>Passkeys / WebAuthn</h2><p>Real browser registration, authentication, listing, and deletion.</p></div>
+        <div class="settings-group">
+          <p class="group-label"><span>02</span> Test identity</p>
+          <label>Username
+            <input id="username" type="text" autocomplete="username" maxlength="50">
+          </label>
+          <label>Email
+            <input id="email" type="email" autocomplete="email">
+          </label>
+          <label>Password
+            <input id="password" type="password" value="Password123!" autocomplete="new-password">
+          </label>
         </div>
-        <div class="notice info">Use <strong>localhost</strong>. Your browser may ask for Windows Hello, Touch ID, a device PIN, or a security key.</div>
-        <div class="button-list">
-          <button class="request-button" data-action="csrf"><code>GET /webauthn/csrf</code><span>Create CSRF/session state</span></button>
-          <button class="request-button" data-action="registration-options"><code>POST /webauthn/register/options</code><span>Registration options only</span></button>
-          <button class="request-button accent" data-action="passkey-register"><code>POST /webauthn/register</code><span>Create and register a real passkey</span></button>
-          <button class="request-button" data-action="authentication-options"><code>POST /webauthn/authenticate/options</code><span>Authentication options only</span></button>
-          <button class="request-button accent" data-action="passkey-login"><code>POST /login/webauthn</code><span>Authenticate and save JWTs</span></button>
-          <button class="request-button danger" data-action="passkey-delete"><code>DELETE /webauthn/register/{credentialId}</code><span>Delete selected passkey</span></button>
-        </div>
-      </section>
-    </main>
 
-    <section class="panel results-panel" aria-labelledby="results-title">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">Live output</p>
-          <h2 id="results-title">Request results</h2>
+        <div class="settings-group">
+          <p class="group-label"><span>03</span> Passkey</p>
+          <label>Passkey label
+            <input id="passkey-label" type="text" value="Browser test passkey" maxlength="100">
+          </label>
+          <label>Credential ID
+            <input id="credential-id" type="text" placeholder="Select after listing" spellcheck="false">
+          </label>
         </div>
-        <div class="result-actions">
-          <span id="runner-status" class="runner-status">Ready</span>
-          <button class="button ghost" data-action="clear-results">Clear</button>
+
+        <details class="settings-disclosure">
+          <summary>Development admin <span aria-hidden="true">+</span></summary>
+          <div class="settings-group disclosure-fields">
+            <label>Admin username
+              <input id="admin-username" type="text" value="admin" autocomplete="username">
+            </label>
+            <label>Admin password
+              <input id="admin-password" type="password" value="password123123" autocomplete="current-password">
+            </label>
+          </div>
+        </details>
+
+        <div class="runtime-state">
+          <div class="runtime-heading">
+            <p class="group-label"><span>04</span> Runtime state</p>
+            <span class="live-label"><i aria-hidden="true"></i> In memory</span>
+          </div>
+          <div class="state-grid" aria-label="Runtime state">
+            <span id="state-user-token" class="state-chip">User token: empty</span>
+            <span id="state-refresh-token" class="state-chip">Refresh token: empty</span>
+            <span id="state-admin-token" class="state-chip">Admin token: empty</span>
+            <span id="state-csrf" class="state-chip">CSRF/session: empty</span>
+            <span id="state-passkey" class="state-chip">Passkey: unknown</span>
+          </div>
+          <p class="muted compact">Tokens never leave page memory and are redacted from response output.</p>
         </div>
-      </div>
-      <ol id="results" class="results" aria-live="polite">
-        <li class="empty-result">Choose an endpoint above or run a combined journey.</li>
-      </ol>
-    </section>
+      </aside>
+
+      <main class="endpoint-catalog" aria-labelledby="endpoints-title">
+        <div class="catalog-heading">
+          <div>
+            <p class="eyebrow">Endpoint catalog</p>
+            <h2 id="endpoints-title">Choose a request</h2>
+          </div>
+          <span class="endpoint-count">19 endpoints</span>
+        </div>
+
+        <section class="panel endpoint-card">
+          <div class="card-heading">
+            <div class="section-icon" aria-hidden="true">OP</div>
+            <div><p class="eyebrow">Public</p><h3>Operations</h3><p>Application discovery and health checks.</p></div>
+          </div>
+          <div class="button-list">
+            <button class="request-button" data-action="actuator"><span class="method get">GET</span><span class="request-copy"><code>/actuator</code><small>Discovery links</small></span><span class="request-arrow" aria-hidden="true">→</span></button>
+            <button class="request-button" data-action="health"><span class="method get">GET</span><span class="request-copy"><code>/actuator/health</code><small>Health status</small></span><span class="request-arrow" aria-hidden="true">→</span></button>
+            <button class="request-button" data-action="info"><span class="method get">GET</span><span class="request-copy"><code>/actuator/info</code><small>Application metadata</small></span><span class="request-arrow" aria-hidden="true">→</span></button>
+          </div>
+        </section>
+
+        <section class="panel endpoint-card">
+          <div class="card-heading">
+            <div class="section-icon" aria-hidden="true">JWT</div>
+            <div><p class="eyebrow">Authentication</p><h3>Password &amp; tokens</h3><p>Registration, login, rotation, and revocation.</p></div>
+          </div>
+          <div class="button-list">
+            <button class="request-button" data-action="register"><span class="method post">POST</span><span class="request-copy"><code>/api/auth/register</code><small>Register current identity</small></span><span class="request-arrow" aria-hidden="true">→</span></button>
+            <button class="request-button" data-action="login"><span class="method post">POST</span><span class="request-copy"><code>/api/auth/login</code><small>Login and save user tokens</small></span><span class="request-arrow" aria-hidden="true">→</span></button>
+            <button class="request-button" data-action="refresh"><span class="method post">POST</span><span class="request-copy"><code>/api/auth/refresh</code><small>Rotate saved refresh token</small></span><span class="request-arrow" aria-hidden="true">→</span></button>
+            <button class="request-button" data-action="logout"><span class="method post">POST</span><span class="request-copy"><code>/api/auth/logout</code><small>Revoke user refresh token</small></span><span class="request-arrow" aria-hidden="true">→</span></button>
+            <button class="request-button" data-action="admin-login"><span class="method post">POST</span><span class="request-copy"><code>/api/auth/login</code><small>Login development admin</small></span><span class="request-arrow" aria-hidden="true">→</span></button>
+          </div>
+        </section>
+
+        <section class="panel endpoint-card">
+          <div class="card-heading">
+            <div class="section-icon" aria-hidden="true">RB</div>
+            <div><p class="eyebrow">Authorization</p><h3>Users &amp; roles</h3><p>Protected identity and administrator checks.</p></div>
+          </div>
+          <div class="button-list">
+            <button class="request-button" data-action="profile"><span class="method get">GET</span><span class="request-copy"><code>/api/users/me</code><small>Current user profile</small></span><span class="request-arrow" aria-hidden="true">→</span></button>
+            <button class="request-button" data-action="passkey-list"><span class="method get">GET</span><span class="request-copy"><code>/api/users/me/passkeys</code><small>List and select passkeys</small></span><span class="request-arrow" aria-hidden="true">→</span></button>
+            <button class="request-button" data-action="admin-users"><span class="method get">GET</span><span class="request-copy"><code>/api/users?page=0&amp;size=20</code><small>Admin-only user list</small></span><span class="request-arrow" aria-hidden="true">→</span></button>
+            <button class="request-button expected" data-action="admin-denied"><span class="method get">GET</span><span class="request-copy"><code>/api/users</code><small>Expect 403 with normal user</small></span><span class="expected-tag">403</span></button>
+            <button class="request-button expected" data-action="anonymous-denied"><span class="method get">GET</span><span class="request-copy"><code>/api/users/me</code><small>Expect 401 without JWT</small></span><span class="expected-tag">401</span></button>
+          </div>
+        </section>
+
+        <section class="panel endpoint-card passkey-card">
+          <div class="card-heading">
+            <div class="section-icon passkey-icon" aria-hidden="true">PK</div>
+            <div><p class="eyebrow">WebAuthn</p><h3>Passkey ceremonies</h3><p>Browser-native registration and authentication.</p></div>
+          </div>
+          <div class="notice info"><span aria-hidden="true">⌘</span><p><strong>Authenticator required</strong> Use <code>localhost</code>. Your browser may ask for Windows Hello, Touch ID, a device PIN, or a security key.</p></div>
+          <div class="button-list">
+            <button class="request-button" data-action="csrf"><span class="method get">GET</span><span class="request-copy"><code>/webauthn/csrf</code><small>Create CSRF/session state</small></span><span class="request-arrow" aria-hidden="true">→</span></button>
+            <button class="request-button" data-action="registration-options"><span class="method post">POST</span><span class="request-copy"><code>/webauthn/register/options</code><small>Registration options only</small></span><span class="request-arrow" aria-hidden="true">→</span></button>
+            <button class="request-button accent" data-action="passkey-register"><span class="method post">POST</span><span class="request-copy"><code>/webauthn/register</code><small>Create and register a real passkey</small></span><span class="request-arrow" aria-hidden="true">→</span></button>
+            <button class="request-button" data-action="authentication-options"><span class="method post">POST</span><span class="request-copy"><code>/webauthn/authenticate/options</code><small>Authentication options only</small></span><span class="request-arrow" aria-hidden="true">→</span></button>
+            <button class="request-button accent" data-action="passkey-login"><span class="method post">POST</span><span class="request-copy"><code>/login/webauthn</code><small>Authenticate and save JWTs</small></span><span class="request-arrow" aria-hidden="true">→</span></button>
+            <button class="request-button danger" data-action="passkey-delete"><span class="method delete">DEL</span><span class="request-copy"><code>/webauthn/register/{credentialId}</code><small>Delete selected passkey</small></span><span class="request-arrow" aria-hidden="true">→</span></button>
+          </div>
+        </section>
+      </main>
+
+      <aside class="panel results-panel" aria-labelledby="results-title">
+        <div class="panel-heading results-heading">
+          <div>
+            <p class="eyebrow">Live output</p>
+            <h2 id="results-title">Response stream</h2>
+          </div>
+          <button class="text-button" data-action="clear-results">Clear</button>
+        </div>
+        <div class="runner-bar">
+          <span id="runner-status" class="runner-status"><i aria-hidden="true"></i> Ready</span>
+          <span class="response-hint">Newest first</span>
+        </div>
+        <ol id="results" class="results" aria-live="polite">
+          <li class="empty-result">
+            <span class="terminal-mark" aria-hidden="true">&gt;_</span>
+            <strong>No requests yet</strong>
+            <p>Choose an endpoint or run a complete journey to inspect status, timing, and sanitized response data.</p>
+          </li>
+        </ol>
+      </aside>
+    </div>
+
+    <footer class="page-footer">
+      <span>AuthKit-Lite / developer workspace</span>
+      <span>Zero build · Zero remote scripts · Tokens in memory only</span>
+    </footer>
   </div>
 </body>
 </html>

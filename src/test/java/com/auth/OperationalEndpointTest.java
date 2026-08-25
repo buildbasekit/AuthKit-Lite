@@ -50,7 +50,11 @@ class OperationalEndpointTest {
 
 		mockMvc.perform(get("/api-test/app.js"))
 				.andExpect(status().isOk())
-				.andExpect(content().contentTypeCompatibleWith("text/javascript"));
+				.andExpect(content().contentTypeCompatibleWith("text/javascript"))
+				.andExpect(content().string(org.hamcrest.Matchers.containsString(
+						"token: state.userAccessToken || undefined")))
+				.andExpect(content().string(org.hamcrest.Matchers.containsString(
+						"const options = await authenticationOptions()")));
 
 		mockMvc.perform(get("/not-api-test/index.html"))
 				.andExpect(status().isForbidden());

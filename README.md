@@ -103,7 +103,9 @@ It creates a unique test user, chains access/refresh tokens, exercises CSRF and 
 
 ## Browser API Test Console
 
-The project includes a zero-build static test client at `src/main/resources/static/api-test/index.html`. It can exercise every endpoint individually, run a combined JWT workflow, or run the complete workflow with a real browser passkey.
+The project includes a zero-build static test client at `src/main/resources/static/api-test/index.html`. It can exercise every endpoint individually, run a combined JWT workflow, or run the complete workflow with a real browser passkey. Every frontend asset for this developer tool is intentionally contained in `src/main/resources/static/api-test/`; it has no package-manager, build-step, or remote runtime dependency.
+
+> **Required when reusing this boilerplate:** Before using AuthKit-Lite as the foundation for your next project, delete the entire `src/main/resources/static/api-test/` directory. The console is development tooling, not an application feature, and removing the complete self-contained folder prevents it from being exposed or misused in a deployed project. Also remove or update the console-specific assertions in `OperationalEndpointTest` if you keep that test class.
 
 1. Start the application with the development profile so the administrator checks can use the seeded account:
 
@@ -124,7 +126,7 @@ Before deploying to production:
 2. Provide a highly entropic, securely managed `JWT_SECRET`.
 3. Implement **rate limiting** at your API Gateway or reverse proxy, as this application focuses purely on authentication logic and does not implement application-level throttling.
 4. Host over HTTPS/TLS to protect bearer tokens in transit.
-5. Remove or restrict `/api-test/**` in deployments where a public developer test console is not desired. The console does not bypass endpoint security, but it is intended for local verification.
+5. Delete `src/main/resources/static/api-test/` before using this boilerplate for a new project. The console does not bypass endpoint security, but removing the self-contained developer frontend prevents it from being exposed or misused in a deployed application.
 
 ## Documentation Reference
 - [Architecture Details](ARCHITECTURE.md)
