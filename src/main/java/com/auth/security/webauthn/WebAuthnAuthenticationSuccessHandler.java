@@ -4,7 +4,6 @@ import com.auth.dtos.TokenResponse;
 import com.auth.entities.User;
 import com.auth.repositories.UserRepository;
 import com.auth.security.AuthenticationTokenService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.MediaType;
@@ -12,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.webauthn.authentication.WebAuthnAuthentication;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
 
@@ -20,12 +20,12 @@ public class WebAuthnAuthenticationSuccessHandler implements AuthenticationSucce
 
     private final UserRepository userRepository;
     private final AuthenticationTokenService authenticationTokenService;
-    private final ObjectMapper objectMapper;
+    private final JsonMapper jsonMapper;
 
-    public WebAuthnAuthenticationSuccessHandler(UserRepository userRepository, AuthenticationTokenService authenticationTokenService, ObjectMapper objectMapper) {
+    public WebAuthnAuthenticationSuccessHandler(UserRepository userRepository, AuthenticationTokenService authenticationTokenService, JsonMapper jsonMapper) {
         this.userRepository = userRepository;
         this.authenticationTokenService = authenticationTokenService;
-        this.objectMapper = objectMapper;
+        this.jsonMapper = jsonMapper;
     }
 
     @Override
@@ -45,6 +45,6 @@ public class WebAuthnAuthenticationSuccessHandler implements AuthenticationSucce
         TokenResponse tokenResponse = authenticationTokenService.createTokenResponse(user);
 
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        objectMapper.writeValue(response.getWriter(), tokenResponse);
+        jsonMapper.writeValue(response.getWriter(), tokenResponse);
     }
 }

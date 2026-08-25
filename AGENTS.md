@@ -20,7 +20,7 @@ Keep the existing `CONTRIBUTING.md` for human contributors. Do not replace it.
 ## 1. Repository Snapshot
 
 - **Application type:** Spring Boot REST API
-- **Language:** Java 21
+- **Language:** Java 26
 - **Build tool:** Maven
 - **Primary package:** `com.auth`
 - **Database:** MySQL through Spring Data JPA
@@ -196,9 +196,9 @@ These are not blockers for normal development, but AI agents should keep them vi
 
 `DemoDataInitializer` creates default roles and demo users if the `dev` profile is active. This is useful for local development, but should never be enabled in production.
 
-### 7.2 Logout Error Handling
+### 7.2 Browser WebAuthn Verification
 
-`AuthController.logout` should not return `null` if logout fails. Prefer consistent exception handling through `GlobalExceptionHandler` and a meaningful `ErrorResponse`.
+WebAuthn option, CSRF, persistence, and failure paths can be automated, but successful registration and assertion require a real browser/platform authenticator. Do not fabricate successful ceremonies in HTTP clients.
 
 ### 7.3 Database Migrations
 

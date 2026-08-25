@@ -51,12 +51,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 		return buildProblemDetail(HttpStatus.CONFLICT, "Duplicate or invalid data provided", "DATA_INTEGRITY_ERROR");
 	}
 
-	@ExceptionHandler(RuntimeException.class)
-	public org.springframework.http.ResponseEntity<ProblemDetail> handleRuntimeException(RuntimeException ex) {
-		ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
-		return org.springframework.http.ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problemDetail);
-	}
-
 	@ExceptionHandler(Exception.class)
 	public ProblemDetail handleGeneral(Exception ex) {
 		return buildProblemDetail(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred", "GENERIC_ERROR");

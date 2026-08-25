@@ -1,6 +1,6 @@
 # AuthKit-Lite Architecture
 
-This document describes the final target architecture of AuthKit-Lite based on Spring Boot 4.1.0 and Java 21.
+This document describes the AuthKit-Lite architecture based on Spring Boot 4.1.1 and Java 26.
 
 ## Core Design Philosophy
 
@@ -55,26 +55,28 @@ When the access token expires, the client submits their raw refresh token to `/a
 
 To support modern passwordless authentication, AuthKit-Lite integrates Spring Security's native WebAuthn (Passkey) support.
 
-1. **Dual Filter Chain Design**:
-   - `/api/**`: Strictly stateless. Assumes standard JWT Bearer tokens and disables CSRF.
-   - `/webauthn/**`: Uses temporary sessions exclusively to maintain the WebAuthn ceremony state (options, challenge, etc.) and relies on `CookieCsrfTokenRepository` for CSRF protection since WebAuthn calls are made directly from frontend JavaScript.
+1. **Ordered Filter Chain Design**:
+   - Order 1, `/webauthn/**` and `/login/webauthn`: Uses Spring Security WebAuthn, accepts JWT authentication for registration/credential management, keeps temporary ceremony state in the HTTP session, and uses `CookieCsrfTokenRepository`. Only CSRF retrieval, authentication options, and assertion submission are public.
+   - Order 2, `/api/**`: Strictly stateless, authenticates standard JWT Bearer tokens, and disables CSRF because it does not use browser cookies for authentication.
+   - Order 3, fallback: Permits the static `/api-test/**` browser test assets, actuator discovery links, and the exposed `health` and `info` endpoints, and denies every other unmatched request.
 2. **Credential Persistence**:
    - We use Spring Security's native `JdbcUserCredentialRepository` and `JdbcPublicKeyCredentialUserEntityRepository`.
-   - The database contains `webauthn_credentials` and `webauthn_user_entity` tables matching the Spring Security defaults, dropping the need for custom JPA entities.
+   - The database contains `user_credentials` and `user_entities`, using the exact column contract expected by Spring Security 7.1's JDBC repositories.
 3. **Passkey Management**:
-   - `PasskeyController` allows authenticated users to list and delete their own passkeys using standard `UserCredentialRepository` lookups.
+   - `PasskeyController` provides the application-specific credential-list DTO. Deletion uses Spring Security's native `DELETE /webauthn/register/{credentialId}` filter and ownership authorization manager.
 
 ---
 
 ## 5. Database Schema & Migrations
 
-- **Flyway**: We use a single clean baseline migration (`V1__init_schema.sql`) to initialize the database schema and baseline roles. 
+- **Flyway**: `V1__init_schema.sql` creates application tables and baseline roles; `V2__add_webauthn.sql` adds Spring Security's JDBC WebAuthn tables. Flyway is the only schema owner.
 - **Hibernate**: Configured to `validate` mode. It ensures the entity mappings perfectly match the Flyway schema.
 - **Constraints**: Enforced rigidly (e.g., unique constraints on emails, usernames, and user-refresh-token relations).
 
 ---
 
-## 5. Testing & Environment Isolation
+## 6. Testing & Environment Isolation
 
-- **Testcontainers**: Tests use an isolated MySQL container managed by Spring Boot 4.1.0's `@ServiceConnection` and Testcontainers integration. This guarantees tests never pollute or depend on the developer's local database.
+- **Testcontainers**: Tests use an isolated MySQL 8.4 container managed by Spring Boot 4.1.1's `@ServiceConnection` and Testcontainers 2 integration. This guarantees tests never pollute or depend on the developer's local database.
 - **MockMvc**: End-to-end integration tests use `MockMvc` to rigorously test API boundaries, assertions, validation, and JSON structures.
+- **Browser API Test Console**: Static HTML, CSS, and JavaScript under `src/main/resources/static/api-test/` provide a same-origin manual client without adding a frontend runtime or dependency. A locally double-clicked `index.html` acts only as a launcher and redirects to the server-hosted `localhost` copy so WebAuthn has a valid RP origin. The client preserves WebAuthn ceremony state through the browser session cookie, sends the cookie-backed CSRF token, delegates credential creation/assertion to `navigator.credentials`, and keeps JWT/refresh tokens only in memory.

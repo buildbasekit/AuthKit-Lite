@@ -25,17 +25,14 @@ public class AuthService {
 	private final RoleRepository roleRepository;
 	private final PasswordEncoder passwordEncoder;
 
-	private final RefreshTokenService refreshTokenService;
 	private final AuthenticationManager authenticationManager;
 	private final AuthenticationTokenService authenticationTokenService;
 
 	public AuthService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder,
-			RefreshTokenService refreshTokenService,
 			AuthenticationManager authenticationManager, AuthenticationTokenService authenticationTokenService) {
 		this.userRepository = userRepository;
 		this.roleRepository = roleRepository;
 		this.passwordEncoder = passwordEncoder;
-		this.refreshTokenService = refreshTokenService;
 		this.authenticationManager = authenticationManager;
 		this.authenticationTokenService = authenticationTokenService;
 	}
@@ -61,15 +58,16 @@ public class AuthService {
 	}
 
 	public TokenResponse login(LoginRequest req) {
+		String normalizedUsername = req.username().trim().toLowerCase();
 		try {
 			authenticationManager.authenticate(
-					new UsernamePasswordAuthenticationToken(req.username(), req.password())
+					new UsernamePasswordAuthenticationToken(normalizedUsername, req.password())
 			);
 		} catch (AuthenticationException e) {
 			throw new InvalidCredentialsException();
 		}
 
-		var user = userRepository.findByUsername(req.username())
+		var user = userRepository.findByUsername(normalizedUsername)
 				.orElseThrow(InvalidCredentialsException::new);
 
 		return authenticationTokenService.createTokenResponse(user);

@@ -13,6 +13,7 @@ This document outlines the security architecture and guarantees of AuthKit-Lite.
   - The application relies entirely on Spring Security's native WebAuthn implementation for handling cryptographic assertions.
   - No biometric data is ever sent, processed, or stored by the application. The authenticator handles user verification locally.
   - The WebAuthn configuration implements strict Relaying Party (RP) ID validation to prevent phishing.
+  - Registration and credential deletion require JWT authentication plus Spring Security CSRF/session state. Authentication options and assertion submission are public but remain CSRF-protected.
 
 ## Refresh Tokens & Session Lifecycle
 - **Refresh Token Hashing**: Refresh tokens are opaque cryptographically secure random bytes sent to the client as URL-safe Base64 strings. We **do not store the raw token in the database**. Instead, we store a **SHA-256 hash** of the token. This prevents an attacker who compromises the database from hijacking active sessions.
@@ -26,8 +27,16 @@ This document outlines the security architecture and guarantees of AuthKit-Lite.
 - AuthKit-Lite strictly avoids hardcoded secrets. All sensitive configuration parameters (e.g., database credentials, JWT secrets) are loaded from environment variables (e.g. `${JWT_SECRET}`).
 
 ## Development Data & Demo Users
-- The application includes an optional development profile (`dev`) that seeds demo users (`admin/admin123` and `user/user123`) via `DemoDataInitializer`. 
+- The application includes an optional development profile (`dev`) that seeds demo users (`admin/password123123` and `user/password123123`) via `DemoDataInitializer`.
 - **Do not enable the `dev` profile in production.** The production profile only creates baseline roles (`ROLE_USER` and `ROLE_ADMIN`) using Flyway.
+
+## Browser API Test Console
+
+- `/api-test/**` contains public static development assets only. It does not make any protected API or WebAuthn operation public; the normal JWT, role, CSRF, session, RP ID, origin, and credential-ownership checks still apply.
+- The console stores access and refresh tokens only in JavaScript memory. It does not write them to local storage, session storage, cookies, URLs, or logs, and response rendering redacts token values.
+- The console loads no remote JavaScript and sends requests only to the base URL selected by the user. Use it with local/demo accounts, not production credentials.
+- WebAuthn runs from the application-hosted `http://localhost:8080` origin. The local `file://` copy redirects there because opaque file origins are not valid relying-party origins.
+- Remove or separately restrict `/api-test/**` when deploying environments that should not expose developer tooling.
 
 ## Rate Limiting & Brute Force Protection (Deployment Responsibility)
 AuthKit-Lite focuses purely on standard token-based authentication. **It does not implement application-level distributed rate limiting.**

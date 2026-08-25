@@ -16,10 +16,11 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.Base64;
-import java.util.UUID;
 
 @Service
 public class RefreshTokenService {
+	private static final java.security.SecureRandom SECURE_RANDOM = new java.security.SecureRandom();
+
 	private final RefreshTokenRepository refreshTokenRepository;
 	private final JwtProperties jwtProperties;
 	private final TokenService tokenService;
@@ -46,7 +47,7 @@ public class RefreshTokenService {
 		refreshTokenRepository.findByUser(user).ifPresent(refreshTokenRepository::delete);
 
 		byte[] randomBytes = new byte[32];
-		new java.security.SecureRandom().nextBytes(randomBytes);
+		SECURE_RANDOM.nextBytes(randomBytes);
 		String rawToken = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
 		RefreshToken rt = new RefreshToken();
 		rt.setUser(user);
@@ -58,7 +59,7 @@ public class RefreshTokenService {
 	}
 
 	public boolean isExpired(RefreshToken token) {
-		return token.getExpiryDate().isBefore(Instant.now());
+		return !token.getExpiryDate().isAfter(Instant.now());
 	}
 
 	public RefreshToken findByHashedToken(String rawToken) {

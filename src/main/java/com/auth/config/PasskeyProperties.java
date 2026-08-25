@@ -13,6 +13,6 @@ public record PasskeyProperties(
         boolean enabled,
         @NotBlank String rpName,
         @NotBlank String rpId,
-        @NotEmpty List<String> allowedOrigins
+        @NotEmpty List<@NotBlank String> allowedOrigins
 ) {
 }

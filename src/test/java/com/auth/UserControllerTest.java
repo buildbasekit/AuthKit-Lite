@@ -6,7 +6,7 @@ import com.auth.entities.User;
 import com.auth.repositories.RefreshTokenRepository;
 import com.auth.repositories.RoleRepository;
 import com.auth.repositories.UserRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,8 +15,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.jwt.JwsHeader;
+import org.springframework.security.oauth2.jwt.JwtClaimsSet;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.Set;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -45,7 +52,10 @@ public class UserControllerTest {
 	private PasswordEncoder passwordEncoder;
 
 	@Autowired
-	private ObjectMapper objectMapper;
+	private JsonMapper objectMapper;
+
+	@Autowired
+	private JwtEncoder jwtEncoder;
 
 	@BeforeEach
 	void setUp() {
@@ -88,7 +98,7 @@ public class UserControllerTest {
 				.andExpect(status().isOk())
 				.andReturn().getResponse().getContentAsString();
 
-		return objectMapper.readTree(loginResponse).get("accessToken").asText();
+		return objectMapper.readTree(loginResponse).get("accessToken").asString();
 	}
 
 	@Test
@@ -125,5 +135,53 @@ public class UserControllerTest {
 				.header("Authorization", "Bearer " + token))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.content").isArray());
+	}
+
+	@Test
+	void testMalformedJwtRejected() throws Exception {
+		mockMvc.perform(get("/api/users/me")
+				.header("Authorization", "Bearer not-a-jwt"))
+				.andExpect(status().isUnauthorized());
+	}
+
+	@Test
+	void testExpiredJwtRejected() throws Exception {
+		String token = encodeToken("authkit", List.of("authkit-api"), Instant.now().minusSeconds(60));
+
+		mockMvc.perform(get("/api/users/me")
+				.header("Authorization", "Bearer " + token))
+				.andExpect(status().isUnauthorized());
+	}
+
+	@Test
+	void testIncorrectIssuerRejected() throws Exception {
+		String token = encodeToken("other-issuer", List.of("authkit-api"), Instant.now().plusSeconds(300));
+
+		mockMvc.perform(get("/api/users/me")
+				.header("Authorization", "Bearer " + token))
+				.andExpect(status().isUnauthorized());
+	}
+
+	@Test
+	void testIncorrectAudienceRejected() throws Exception {
+		String token = encodeToken("authkit", List.of("other-api"), Instant.now().plusSeconds(300));
+
+		mockMvc.perform(get("/api/users/me")
+				.header("Authorization", "Bearer " + token))
+				.andExpect(status().isUnauthorized());
+	}
+
+	private String encodeToken(String issuer, List<String> audience, Instant expiresAt) {
+		Instant now = Instant.now();
+		JwtClaimsSet claims = JwtClaimsSet.builder()
+				.issuer(issuer)
+				.issuedAt(now.minusSeconds(120))
+				.expiresAt(expiresAt)
+				.subject("testuser")
+				.audience(audience)
+				.claim("roles", List.of("ROLE_USER"))
+				.build();
+		return jwtEncoder.encode(JwtEncoderParameters.from(
+				JwsHeader.with(MacAlgorithm.HS256).build(), claims)).getTokenValue();
 	}
 }

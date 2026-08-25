@@ -22,9 +22,10 @@ Do not save this content as `CONTRIBUTING.md`, because that file already exists 
 
 Before running the project locally, install:
 
-- Java 21
+- Java 26
 - Maven 3.9+
 - MySQL 8+ or a compatible MySQL database
+- Docker Desktop or another Testcontainers-compatible Docker engine for tests
 - Git
 - An IDE such as IntelliJ IDEA, Eclipse, or VS Code
 
@@ -49,22 +50,15 @@ CREATE DATABASE authkit_lite;
 
 ### 2.3 Configure application properties
 
-Update:
-
-```text
-src/main/resources/application.properties
-```
-
-Set your local database values and a long random JWT secret.
+Provide local database values and a long random JWT secret through Spring Boot's externalized configuration.
 
 Example shape:
 
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/authkit_lite
-spring.datasource.username=your_local_username
-spring.datasource.password=your_local_password
-
-JWT_SECRET=replace-with-a-long-random-local-development-secret
+```bash
+export DB_URL=jdbc:mysql://localhost:3306/authkit_lite
+export DB_USERNAME=your_local_username
+export DB_PASSWORD=your_local_password
+export JWT_SECRET=replace-with-a-long-random-local-development-secret
 ```
 
 Do not commit real credentials or production secrets.
@@ -72,13 +66,13 @@ Do not commit real credentials or production secrets.
 ### 2.4 Run the app
 
 ```bash
-mvn spring-boot:run
+./mvnw spring-boot:run
 ```
 
 ### 2.5 Run tests
 
 ```bash
-mvn test
+./mvnw test
 ```
 
 ---
@@ -117,7 +111,7 @@ Keep commits focused. Do not mix unrelated formatting, refactoring, and feature 
 
 ### Java and Spring
 
-- Use Java 21 features only when they improve clarity.
+- Use Java 26 features only when they improve clarity, and avoid preview features in the reusable baseline.
 - Follow Spring Boot 4.1 conventions.
 - Prefer constructor injection.
 - Keep controllers thin.
@@ -170,7 +164,7 @@ Always:
 Run this before opening a pull request:
 
 ```bash
-mvn clean test
+./mvnw clean verify
 ```
 
 Add or update tests when changing:
@@ -218,7 +212,7 @@ Before requesting review, verify:
 - [ ] Repositories only handle persistence.
 - [ ] New endpoints are protected intentionally.
 - [ ] DTOs do not expose sensitive fields.
-- [ ] `mvn test` passes.
+- [ ] `./mvnw clean verify` passes without skipped tests.
 - [ ] Security-sensitive changes include tests.
 - [ ] Documentation is updated where needed.
 - [ ] No real secrets or local credentials are committed.

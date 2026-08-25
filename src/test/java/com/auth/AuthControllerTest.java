@@ -8,9 +8,7 @@ import com.auth.entities.User;
 import com.auth.repositories.RefreshTokenRepository;
 import com.auth.repositories.RoleRepository;
 import com.auth.repositories.UserRepository;
-import com.auth.security.AuthService;
-import com.auth.security.TokenService;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +27,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -54,13 +51,7 @@ public class AuthControllerTest {
 	private PasswordEncoder passwordEncoder;
 
 	@Autowired
-	private ObjectMapper objectMapper;
-
-	@Autowired
-	private AuthService authService;
-
-	@Autowired
-	private TokenService tokenService;
+	private JsonMapper objectMapper;
 
 	@BeforeEach
 	void setUp() {
@@ -110,6 +101,17 @@ public class AuthControllerTest {
 	}
 
 	@Test
+	void testRegisterDuplicateEmail() throws Exception {
+		RegisterRequest request = new RegisterRequest("otheruser", "testuser@example.com", "password123123");
+
+		mockMvc.perform(post("/api/auth/register")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)))
+				.andExpect(status().isConflict())
+				.andExpect(jsonPath("$.code").value("EMAIL_ALREADY_EXISTS"));
+	}
+
+	@Test
 	void testValidationFailure() throws Exception {
 		RegisterRequest request = new RegisterRequest("", "not-an-email", "12");
 
@@ -117,6 +119,15 @@ public class AuthControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	void testMalformedJsonRejected() throws Exception {
+		mockMvc.perform(post("/api/auth/register")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{not-json"))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.status").value(400));
 	}
 
 	@Test
@@ -132,6 +143,17 @@ public class AuthControllerTest {
 	}
 
 	@Test
+	void testLoginNormalizesUsername() throws Exception {
+		LoginRequest request = new LoginRequest("  TESTUSER  ", "password123123");
+
+		mockMvc.perform(post("/api/auth/login")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.accessToken").isNotEmpty());
+	}
+
+	@Test
 	void testLoginInvalidPassword() throws Exception {
 		LoginRequest request = new LoginRequest("testuser", "wrongpassword");
 
@@ -139,7 +161,7 @@ public class AuthControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isUnauthorized())
-				.andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
+				.andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"));
 	}
 
 	@Test
@@ -166,7 +188,7 @@ public class AuthControllerTest {
 				.andExpect(status().isOk())
 				.andReturn().getResponse().getContentAsString();
 
-		String refreshToken = objectMapper.readTree(loginResponse).get("refreshToken").asText();
+		String refreshToken = objectMapper.readTree(loginResponse).get("refreshToken").asString();
 
 		// Refresh token
 		RefreshTokenRequest refreshRequest = new RefreshTokenRequest(refreshToken);
@@ -178,7 +200,7 @@ public class AuthControllerTest {
 				.andExpect(jsonPath("$.refreshToken").isNotEmpty())
 				.andReturn().getResponse().getContentAsString();
 
-		String newRefreshToken = objectMapper.readTree(refreshResponse).get("refreshToken").asText();
+		String newRefreshToken = objectMapper.readTree(refreshResponse).get("refreshToken").asString();
 
 		// Ensure old token is revoked
 		RefreshTokenRequest oldRefreshRequest = new RefreshTokenRequest(refreshToken);
@@ -204,7 +226,7 @@ public class AuthControllerTest {
 				.andExpect(status().isOk())
 				.andReturn().getResponse().getContentAsString();
 
-		String refreshToken = objectMapper.readTree(loginResponse).get("refreshToken").asText();
+		String refreshToken = objectMapper.readTree(loginResponse).get("refreshToken").asString();
 
 		// Disable user
 		User user = userRepository.findByUsername("testuser").get();
@@ -228,11 +250,14 @@ public class AuthControllerTest {
 				.andExpect(status().isOk())
 				.andReturn().getResponse().getContentAsString();
 
-		String refreshToken = objectMapper.readTree(loginResponse).get("refreshToken").asText();
+		var loginJson = objectMapper.readTree(loginResponse);
+		String accessToken = loginJson.get("accessToken").asString();
+		String refreshToken = loginJson.get("refreshToken").asString();
 
 		// Logout
 		RefreshTokenRequest refreshRequest = new RefreshTokenRequest(refreshToken);
 		mockMvc.perform(post("/api/auth/logout")
+				.header("Authorization", "Bearer " + accessToken)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(refreshRequest)))
 				.andExpect(status().isOk());
@@ -242,6 +267,36 @@ public class AuthControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(refreshRequest)))
 				.andExpect(status().isUnauthorized());
+	}
+
+	@Test
+	void testLogoutRequiresAccessToken() throws Exception {
+		mockMvc.perform(post("/api/auth/logout")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(new RefreshTokenRequest("unknown"))))
+				.andExpect(status().isUnauthorized());
+	}
+
+	@Test
+	void testInvalidRefreshTokenRejected() throws Exception {
+		mockMvc.perform(post("/api/auth/refresh")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(new RefreshTokenRequest("unknown"))))
+				.andExpect(status().isUnauthorized())
+				.andExpect(jsonPath("$.code").value("INVALID_REFRESH_TOKEN"));
+	}
+
+	@Test
+	void testRegistrationHashesPassword() throws Exception {
+		RegisterRequest request = new RegisterRequest("hasheduser", "hashed@example.com", "password123123");
+		mockMvc.perform(post("/api/auth/register")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)))
+				.andExpect(status().isOk());
+
+		User saved = userRepository.findByUsername("hasheduser").orElseThrow();
+		assertThat(saved.getPassword()).isNotEqualTo(request.password());
+		assertThat(passwordEncoder.matches(request.password(), saved.getPassword())).isTrue();
 	}
 	
 	@Test
@@ -254,7 +309,7 @@ public class AuthControllerTest {
 				.andExpect(status().isOk())
 				.andReturn().getResponse().getContentAsString();
 
-		String refreshToken = objectMapper.readTree(loginResponse).get("refreshToken").asText();
+		String refreshToken = objectMapper.readTree(loginResponse).get("refreshToken").asString();
 		RefreshTokenRequest refreshRequest = new RefreshTokenRequest(refreshToken);
 		String requestContent = objectMapper.writeValueAsString(refreshRequest);
 

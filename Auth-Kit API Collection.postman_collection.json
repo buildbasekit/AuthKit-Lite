@@ -1,303 +1,1723 @@
 {
   "info": {
-    "_postman_id": "5078d241-15fa-4fc7-b988-090f40cb081c",
-    "name": "Auth-Kit API Collection",
-    "description": "## 🔐 Auth Kit API Collection — BuildBaseKit\n\nThis collection showcases a complete **JWT-based authentication and role-based authorization system** built with Spring Boot.\n\nDesigned for developers who want a **production-ready auth flow** without reinventing the wheel.\n\n---\n\n## ⚡ What’s Included\n\n- User Registration & Login\n    \n- Access & Refresh Token handling\n    \n- Token Refresh & Logout\n    \n- Protected endpoints\n    \n- Role-based access (User / Admin)\n    \n\n---\n\n## 🚀 Quick Flow\n\n1. Register → `/auth/register`\n    \n2. Login → `/auth/login` (tokens auto-saved)\n    \n3. Access protected routes using `access_token`\n    \n4. Refresh token → `/auth/refresh`\n    \n5. Logout → `/auth/logout`\n    \n\n---\n\n## 🔑 Setup\n\n- Set `base_url` → `http://localhost:8080`\n    \n- Tokens are automatically managed via scripts\n    \n\n---\n\n## 🌐 BuildBaseKit\n\nThis collection is part of **BuildBaseKit** — production-ready backend boilerplates.\n\n👉 [https://buildbasekit.com](https://buildbasekit.com/)\n\n---\n\nRun requests in sequence for best experience.",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "47320634",
-    "_collection_link": "https://go.postman.co/collection/47320634-5078d241-15fa-4fc7-b988-090f40cb081c?source=collection_link"
+    "_postman_id": "4b8284db-9b5e-4c4b-a4f3-authkitlite41",
+    "name": "AuthKit-Lite API — Human Test Suite",
+    "description": "# AuthKit-Lite API — Human Test Suite\n\nUse this collection in either of two ways:\n\n## Run every automatable API as one workflow\n\n1. Start AuthKit-Lite with the `dev` profile and a MySQL database.\n2. Confirm `baseUrl` and the seeded admin credentials in the collection Variables tab.\n3. Select **01 — Guided Full API Test** and click **Run**.\n4. Keep the saved request order. The first request creates a fresh test identity and clears old runtime tokens.\n5. Review the test summary. The guided folder covers operations, registration, password login, JWT authorization, refresh rotation and replay rejection, logout, admin authorization, CSRF, CORS, and WebAuthn option endpoints.\n\n## Run one API at a time\n\nOpen any request and read its **Docs** description. Each request states its prerequisites, expected result, and variables it saves. For protected endpoints, run the relevant login request first or paste a token into the collection Variables tab.\n\n## Generated and saved values\n\nWith `autoGenerateUser=true`, the collection creates a unique `username` and `email`. Login, refresh, admin login, and CSRF requests automatically save their returned values. Runtime token variables intentionally start empty.\n\n## Browser-only passkey operations\n\nThe **02 — Browser Passkey Templates** folder contains every remaining WebAuthn endpoint. These templates are skipped unless `runBrowserRequests=true`, because Postman cannot call `navigator.credentials.create()` or `navigator.credentials.get()`. Paste authenticator output captured by a browser before sending them.\n\nThe collection uses safe local demo values only. Do not store production passwords, secrets, access tokens, or refresh tokens in a shared collection.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
-  "item": [
-    {
-      "name": "AUTH",
-      "item": [
-        {
-          "name": "Auth | Login [POST]",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "const jsonData = pm.response.json();",
-                  "",
-                  "pm.test(\"Token expiration should be present\", function () {",
-                  "    pm.expect(jsonData.expiresInSeconds).to.be.a('number');",
-                  "    pm.environment.set(\"access_token\", jsonData.accessToken);",
-                  "    pm.environment.set(\"refresh_token\", jsonData.refreshToken);",
-                  "});"
-                ],
-                "type": "text/javascript",
-                "packages": {}
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\r\n    \"username\":\"admin\",\r\n    \"password\":\"password123123\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/api/auth/login",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "login"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Auth | Refresh Token [POST]",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "const jsonData = pm.response.json();",
-                  "pm.environment.set(\"access_token\", jsonData.accessToken);",
-                  "pm.environment.set(\"refresh_token\", jsonData.refreshToken);"
-                ],
-                "type": "text/javascript",
-                "packages": {}
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\r\n    \"refreshToken\": \"{{refresh_token}}\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/api/auth/refresh",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "refresh"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Auth | Logout [POST]",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.environment.unset(\"access_token\"); \r",
-                  "pm.environment.unset(\"refresh_token\");"
-                ],
-                "type": "text/javascript",
-                "packages": {}
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\r\n    \"refreshToken\": \"{{refresh_token}}\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/api/auth/logout",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "logout"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Auth | Register [POST]",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\r\n    \"username\":\"boiler_agents\",\r\n    \"email\":\"boileragents@gmail.com\",\r\n    \"password\":\"password123123\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/api/auth/register",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "register"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "USER",
-      "item": [
-        {
-          "name": "Users | Me [GET]",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/api/users/me",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "users",
-                "me"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "ADMIN",
-      "item": [
-        {
-          "name": "Users | List All [GET] (Admin)",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/api/users",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "users"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    }
-  ],
   "event": [
     {
       "listen": "prerequest",
       "script": {
         "type": "text/javascript",
-        "packages": {},
-        "requests": {},
         "exec": [
-          ""
-        ]
-      }
-    },
-    {
-      "listen": "test",
-      "script": {
-        "type": "text/javascript",
-        "packages": {},
-        "requests": {},
-        "exec": [
-          ""
+          "const autoGenerate = pm.collectionVariables.get('autoGenerateUser') !== 'false';",
+          "if (!pm.collectionVariables.get('runId')) {",
+          "  const runId = Date.now().toString();",
+          "  pm.collectionVariables.set('runId', runId);",
+          "  if (autoGenerate) {",
+          "    pm.collectionVariables.set('username', `authkit_user_${runId}`);",
+          "    pm.collectionVariables.set('email', `authkit_user_${runId}@example.com`);",
+          "  }",
+          "}",
+          "if (!pm.collectionVariables.get('baseUrl')) {",
+          "  pm.collectionVariables.set('baseUrl', 'http://localhost:8080');",
+          "}"
         ]
       }
     }
   ],
   "variable": [
     {
-      "key": "base_url",
-      "value": "http://localhost:8080"
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string",
+      "description": "Root URL of the running AuthKit-Lite application. Do not include a trailing slash."
     },
     {
-      "key": "access_token",
-      "value": ""
+      "key": "autoGenerateUser",
+      "value": "true",
+      "type": "string",
+      "description": "When true, the first guided request generates a unique username and email. Set false to use your own username and email values."
     },
     {
-      "key": "refresh_token",
-      "value": ""
+      "key": "runId",
+      "value": "",
+      "type": "string",
+      "description": "Timestamp identifier generated for a guided run. Used to create a unique test identity."
+    },
+    {
+      "key": "username",
+      "value": "",
+      "type": "string",
+      "description": "Normal-user login name. Generated automatically unless autoGenerateUser is false."
+    },
+    {
+      "key": "email",
+      "value": "",
+      "type": "string",
+      "description": "Normal-user email. Generated automatically unless autoGenerateUser is false."
+    },
+    {
+      "key": "password",
+      "value": "password123123",
+      "type": "string",
+      "description": "Safe local test password used for registration and login. Minimum 12 characters."
+    },
+    {
+      "key": "adminUsername",
+      "value": "admin",
+      "type": "string",
+      "description": "Development-profile seeded administrator username."
+    },
+    {
+      "key": "adminPassword",
+      "value": "password123123",
+      "type": "string",
+      "description": "Development-profile seeded administrator password. Change if your local seed configuration differs."
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string",
+      "description": "Normal-user JWT. Saved automatically by password login and refresh."
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string",
+      "description": "Current normal-user refresh token. Saved automatically by password login and refresh."
+    },
+    {
+      "key": "oldRefreshToken",
+      "value": "",
+      "type": "string",
+      "description": "Consumed refresh token retained only to verify replay rejection."
+    },
+    {
+      "key": "adminAccessToken",
+      "value": "",
+      "type": "string",
+      "description": "Administrator JWT saved automatically by admin login."
+    },
+    {
+      "key": "adminRefreshToken",
+      "value": "",
+      "type": "string",
+      "description": "Administrator refresh token saved automatically by admin login."
+    },
+    {
+      "key": "csrfToken",
+      "value": "",
+      "type": "string",
+      "description": "X-XSRF-TOKEN value saved by the WebAuthn CSRF request. The Postman cookie jar preserves the matching session/cookie."
+    },
+    {
+      "key": "credentialId",
+      "value": "",
+      "type": "string",
+      "description": "Credential identifier produced by a real browser enrollment. Required for the manual delete template."
+    },
+    {
+      "key": "allowedOrigin",
+      "value": "http://localhost:3000",
+      "type": "string",
+      "description": "Origin expected to be allowed by authkit.passkey.allowed-origins."
+    },
+    {
+      "key": "untrustedOrigin",
+      "value": "https://untrusted.example",
+      "type": "string",
+      "description": "Origin intentionally absent from the allowlist, used for a negative CORS test."
+    },
+    {
+      "key": "pageSize",
+      "value": "10",
+      "type": "string",
+      "description": "Page size used by user-list requests."
+    },
+    {
+      "key": "runBrowserRequests",
+      "value": "false",
+      "type": "string",
+      "description": "Safety switch for browser-authenticator request templates. Leave false during normal collection runs."
+    },
+    {
+      "key": "webauthnRegistrationResponse",
+      "value": "",
+      "type": "string",
+      "description": "Complete JSON returned by navigator.credentials.create(), serialized in the shape expected by Spring Security."
+    },
+    {
+      "key": "webauthnAuthenticationResponse",
+      "value": "",
+      "type": "string",
+      "description": "Complete JSON returned by navigator.credentials.get(), serialized in the shape expected by Spring Security."
     }
-  ]
+  ],
+  "item": [
+    {
+      "name": "00 — Read Me First",
+      "description": "# Quick start\n\n## Combined test\n\nSelect **01 — Guided Full API Test**, click **Run**, keep the displayed order, and start the run. Use a fresh or reusable local database; unique normal-user credentials are generated for every run.\n\nThe administrator requests expect the development seed account. Start the application with:\n\n```bash\n./mvnw spring-boot:run -Dspring-boot.run.profiles=dev\n```\n\n## Individual API test\n\n1. Open a request.\n2. Read its Docs panel.\n3. Satisfy the listed prerequisite request or enter the needed collection variable.\n4. Click **Send**.\n\nTypical setup requests:\n\n- Normal-user JWT: **02 · Registration & Password Login → Login normal user and save tokens**\n- Administrator JWT: **05 · Administrator APIs → Login administrator and save tokens**\n- WebAuthn CSRF/session: **06 · WebAuthn Options, CSRF & CORS → Obtain WebAuthn CSRF token and cookie**\n\n## Reset\n\nRun **01 · Start a new test run** to create another unique normal user and clear saved runtime values. Postman's cookie jar should remain enabled for WebAuthn requests.",
+      "item": []
+    },
+    {
+      "name": "01 — Guided Full API Test",
+      "description": "Run this folder to execute all Postman-compatible APIs as one ordered workflow.\n\nThe first request resets generated identity and runtime variables. Login, refresh, admin login, and CSRF requests chain their output automatically. Negative tests are intentionally included and pass only when the API returns the documented rejection status.\n\nYou can also expand this folder and send any request individually; each request documents its prerequisites.",
+      "item": [
+        {
+          "name": "01 · Start & Operational Endpoints",
+          "item": [
+            {
+              "name": "01 · Start a new test run",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/actuator",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "actuator"
+                  ]
+                },
+                "description": "### Purpose\n\nStarts a clean guided run and verifies actuator discovery.\n\n### Prerequisites\n\nNone. The application must be running.\n\n### Expected result\n\n200 JSON containing links to exposed actuator endpoints.\n\n### Variables saved\n\nGenerates runId/username/email and clears runtime tokens.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "const runId = Date.now().toString();",
+                      "const autoGenerate = pm.collectionVariables.get('autoGenerateUser') !== 'false';",
+                      "pm.collectionVariables.set('runId', runId);",
+                      "if (autoGenerate) {",
+                      "  pm.collectionVariables.set('username', `authkit_user_${runId}`);",
+                      "  pm.collectionVariables.set('email', `authkit_user_${runId}@example.com`);",
+                      "} else if (!pm.collectionVariables.get('username') || !pm.collectionVariables.get('email')) {",
+                      "  throw new Error('Set username and email, or set autoGenerateUser=true.');",
+                      "}",
+                      "['accessToken', 'refreshToken', 'oldRefreshToken', 'adminAccessToken', 'adminRefreshToken', 'csrfToken', 'credentialId'].forEach(key => pm.collectionVariables.set(key, ''));"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                      "pm.test(\"Response is JSON\", () => pm.response.to.be.json);",
+                      "pm.test(\"Health and info links exist\", () => { const links=pm.response.json()._links; pm.expect(links.health.href).to.be.a(\"string\"); pm.expect(links.info.href).to.be.a(\"string\"); });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "02 · Check application health",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/actuator/health",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "actuator",
+                    "health"
+                  ]
+                },
+                "description": "### Purpose\n\nReads the public application health endpoint.\n\n### Prerequisites\n\nApplication running.\n\n### Expected result\n\n200 JSON with status UP.\n\n### Variables saved\n\nNothing.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                      "pm.test(\"Response is JSON\", () => pm.response.to.be.json);",
+                      "pm.test(\"Application is UP\", () => pm.expect(pm.response.json().status).to.eql(\"UP\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "03 · Read application info",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/actuator/info",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "actuator",
+                    "info"
+                  ]
+                },
+                "description": "### Purpose\n\nReads the public application information endpoint.\n\n### Prerequisites\n\nApplication running.\n\n### Expected result\n\n200 JSON response.\n\n### Variables saved\n\nNothing.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                      "pm.test(\"Response is JSON\", () => pm.response.to.be.json);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "04 · Confirm unknown routes are denied",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/not-an-api",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "not-an-api"
+                  ]
+                },
+                "description": "### Purpose\n\nConfirms unmatched routes are denied by the fallback security chain.\n\n### Prerequisites\n\nApplication running.\n\n### Expected result\n\n403 Forbidden.\n\n### Variables saved\n\nNothing.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 403\", () => pm.response.to.have.status(403));"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "description": "Starts a new human or runner session, confirms the application is available, and verifies the fallback security chain.\n\n**Individual use:** The first request deliberately generates a new test user and clears saved tokens. Run it whenever you want a clean logical test session."
+        },
+        {
+          "name": "02 · Registration & Password Login",
+          "item": [
+            {
+              "name": "01 · Register a normal user",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "description": "Required JSON request media type."
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"username\":\"{{username}}\",\"email\":\"{{email}}\",\"password\":\"{{password}}\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/auth/register",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "register"
+                  ]
+                },
+                "description": "### Purpose\n\nRegisters the generated or manually configured normal user.\n\n### Prerequisites\n\nusername, email, and password set. Run Start first for automatic values.\n\n### Expected result\n\n200 with a registration confirmation message.\n\n### Variables saved\n\nNothing; subsequent requests reuse the configured credentials.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                      "pm.test(\"Response is JSON\", () => pm.response.to.be.json);",
+                      "pm.test(\"Registration confirmed\", () => pm.expect(pm.response.json().message).to.eql(\"User registered successfully\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "02 · Reject duplicate registration",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "description": "Required JSON request media type."
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"username\":\"{{username}}\",\"email\":\"duplicate_{{email}}\",\"password\":\"{{password}}\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/auth/register",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "register"
+                  ]
+                },
+                "description": "### Purpose\n\nRepeats registration to verify duplicate-username protection.\n\n### Prerequisites\n\nRegister unique user must have succeeded.\n\n### Expected result\n\n409 Conflict.\n\n### Variables saved\n\nNothing.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 409\", () => pm.response.to.have.status(409));",
+                      "pm.test(\"Duplicate code\", () => pm.expect(pm.response.json().code).to.eql(\"USERNAME_ALREADY_EXISTS\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "03 · Reject invalid registration data",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "description": "Required JSON request media type."
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"username\":\"x\",\"email\":\"not-an-email\",\"password\":\"short\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/auth/register",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "register"
+                  ]
+                },
+                "description": "### Purpose\n\nDemonstrates Jakarta Validation for an invalid email and short password.\n\n### Prerequisites\n\nNone.\n\n### Expected result\n\n400 Bad Request with safe validation details.\n\n### Variables saved\n\nNothing.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "04 · Reject malformed registration JSON",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "description": "Required JSON request media type."
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"username\":",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/auth/register",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "register"
+                  ]
+                },
+                "description": "### Purpose\n\nDemonstrates malformed JSON handling without leaking internals.\n\n### Prerequisites\n\nNone.\n\n### Expected result\n\n400 Bad Request.\n\n### Variables saved\n\nNothing.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "05 · Reject an incorrect password",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "description": "Required JSON request media type."
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"username\":\"{{username}}\",\"password\":\"definitely-wrong\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "### Purpose\n\nVerifies password authentication rejects an incorrect password.\n\n### Prerequisites\n\nRegistered username must exist.\n\n### Expected result\n\n401 Unauthorized.\n\n### Variables saved\n\nNothing.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 401\", () => pm.response.to.have.status(401));",
+                      "pm.test(\"Credential code\", () => pm.expect(pm.response.json().code).to.eql(\"INVALID_CREDENTIALS\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "06 · Login normal user and save tokens",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "description": "Required JSON request media type."
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"username\":\"  {{username}}  \",\"password\":\"{{password}}\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "### Purpose\n\nAuthenticates the normal user; the request intentionally changes username casing and whitespace to verify normalization.\n\n### Prerequisites\n\nRegister unique user must have succeeded.\n\n### Expected result\n\n200 with Bearer access and refresh tokens.\n\n### Variables saved\n\naccessToken and refreshToken.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                      "pm.test(\"Response is JSON\", () => pm.response.to.be.json);",
+                      "const body=pm.response.json();",
+                      "pm.test(\"Tokens returned\", () => { pm.expect(body.accessToken).to.be.a(\"string\").and.not.empty; pm.expect(body.refreshToken).to.be.a(\"string\").and.not.empty; pm.expect(body.tokenType).to.eql(\"Bearer\"); });",
+                      "pm.collectionVariables.set(\"accessToken\",body.accessToken);",
+                      "pm.collectionVariables.set(\"refreshToken\",body.refreshToken);"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "description": "Creates the generated normal user, demonstrates validation and malformed-input responses, then performs password login.\n\n**Prerequisite:** Run **01 · Start a new test run** first, or set `username`, `email`, and `password` manually."
+        },
+        {
+          "name": "03 · User JWT & Authorization",
+          "item": [
+            {
+              "name": "01 · Get current user profile",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/users/me",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "users",
+                    "me"
+                  ]
+                },
+                "description": "### Purpose\n\nReturns the profile represented by the current normal-user JWT.\n\n### Prerequisites\n\naccessToken populated by normal-user login or entered manually.\n\n### Expected result\n\n200 JSON profile without password data.\n\n### Variables saved\n\nNothing.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                      "pm.test(\"Response is JSON\", () => pm.response.to.be.json);",
+                      "pm.test(\"Correct user\", () => pm.expect(pm.response.json().username).to.eql(pm.collectionVariables.get(\"username\")));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "02 · Reject user access to admin list",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/users?page=0&size={{pageSize}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "users?page=0&size=10"
+                  ]
+                },
+                "description": "### Purpose\n\nVerifies ROLE_USER cannot access the administrator user list.\n\n### Prerequisites\n\nNormal-user accessToken.\n\n### Expected result\n\n403 Forbidden.\n\n### Variables saved\n\nNothing.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 403\", () => pm.response.to.have.status(403));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "03 · List current user's passkeys",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/users/me/passkeys",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "users",
+                    "me",
+                    "passkeys"
+                  ]
+                },
+                "description": "### Purpose\n\nLists passkey metadata owned by the authenticated normal user.\n\n### Prerequisites\n\nNormal-user accessToken.\n\n### Expected result\n\n200 JSON array; empty before browser enrollment.\n\n### Variables saved\n\nNothing.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                      "pm.test(\"Response is JSON\", () => pm.response.to.be.json);",
+                      "pm.test(\"Array response\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "04 · Reject missing JWT",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/users/me",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "users",
+                    "me"
+                  ]
+                },
+                "description": "### Purpose\n\nCalls a protected endpoint without Authorization.\n\n### Prerequisites\n\nNone.\n\n### Expected result\n\n401 Unauthorized.\n\n### Variables saved\n\nNothing.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 401\", () => pm.response.to.have.status(401));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "05 · Reject malformed JWT",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer not-a-jwt",
+                    "description": "Deliberately malformed token used by this negative test."
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/users/me",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "users",
+                    "me"
+                  ]
+                },
+                "description": "### Purpose\n\nCalls a protected endpoint with a deliberately malformed Bearer token.\n\n### Prerequisites\n\nNone.\n\n### Expected result\n\n401 Unauthorized.\n\n### Variables saved\n\nNothing.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 401\", () => pm.response.to.have.status(401));"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "description": "Exercises the current-user profile, user/admin authorization boundary, passkey list, and missing or malformed Bearer-token behavior.\n\n**Prerequisite for success requests:** `accessToken` must be populated by normal-user login."
+        },
+        {
+          "name": "04 · Refresh Rotation & User Logout",
+          "item": [
+            {
+              "name": "01 · Rotate refresh token and save new tokens",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "description": "Required JSON request media type."
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"refreshToken\":\"{{refreshToken}}\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/auth/refresh",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "refresh"
+                  ]
+                },
+                "description": "### Purpose\n\nConsumes the current refresh token and atomically issues a new access/refresh pair.\n\n### Prerequisites\n\nrefreshToken populated by normal-user login.\n\n### Expected result\n\n200 with rotated tokens.\n\n### Variables saved\n\noldRefreshToken, accessToken, and refreshToken.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.collectionVariables.set(\"oldRefreshToken\", pm.collectionVariables.get(\"refreshToken\"));"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                      "pm.test(\"Response is JSON\", () => pm.response.to.be.json);",
+                      "const body=pm.response.json();",
+                      "pm.test(\"Token rotated\", () => pm.expect(body.refreshToken).not.to.eql(pm.collectionVariables.get(\"oldRefreshToken\")));",
+                      "pm.collectionVariables.set(\"accessToken\",body.accessToken);",
+                      "pm.collectionVariables.set(\"refreshToken\",body.refreshToken);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "02 · Reject old refresh-token replay",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "description": "Required JSON request media type."
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"refreshToken\":\"{{oldRefreshToken}}\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/auth/refresh",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "refresh"
+                  ]
+                },
+                "description": "### Purpose\n\nAttempts to reuse the consumed refresh token.\n\n### Prerequisites\n\nRotate refresh token must have run.\n\n### Expected result\n\n401 Unauthorized.\n\n### Variables saved\n\nNothing.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 401\", () => pm.response.to.have.status(401));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "03 · Use the rotated access token",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/users/me",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "users",
+                    "me"
+                  ]
+                },
+                "description": "### Purpose\n\nConfirms the access token returned by refresh authenticates successfully.\n\n### Prerequisites\n\nRotate refresh token must have run.\n\n### Expected result\n\n200 current-user profile.\n\n### Variables saved\n\nNothing.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                      "pm.test(\"Response is JSON\", () => pm.response.to.be.json);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "04 · Logout normal user",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "description": "Required JSON request media type."
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"refreshToken\":\"{{refreshToken}}\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/auth/logout",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "logout"
+                  ]
+                },
+                "description": "### Purpose\n\nRevokes the current normal-user refresh token. The access token authenticates the logout request.\n\n### Prerequisites\n\nCurrent accessToken and refreshToken.\n\n### Expected result\n\n200 logout confirmation.\n\n### Variables saved\n\nNothing.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                      "pm.test(\"Response is JSON\", () => pm.response.to.be.json);",
+                      "pm.test(\"Logout confirmed\", () => pm.expect(pm.response.json().message).to.eql(\"Logged out successfully\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "05 · Reject refresh after logout",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "description": "Required JSON request media type."
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"refreshToken\":\"{{refreshToken}}\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/auth/refresh",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "refresh"
+                  ]
+                },
+                "description": "### Purpose\n\nConfirms the refresh token revoked during logout cannot be reused.\n\n### Prerequisites\n\nLogout current refresh token must have run.\n\n### Expected result\n\n401 Unauthorized.\n\n### Variables saved\n\nNothing.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 401\", () => pm.response.to.have.status(401));"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "description": "Runs the full refresh-token lifecycle: rotate, reject replay, use the new access token, logout, and reject the revoked refresh token.\n\n**Prerequisite:** Normal-user login must have saved `accessToken` and `refreshToken`. Run this folder in order."
+        },
+        {
+          "name": "05 · Administrator APIs",
+          "item": [
+            {
+              "name": "01 · Login administrator and save tokens",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "description": "Required JSON request media type."
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"username\":\"{{adminUsername}}\",\"password\":\"{{adminPassword}}\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "### Purpose\n\nAuthenticates the administrator seeded by the dev profile.\n\n### Prerequisites\n\nApplication started with dev profile, or admin variables replaced with valid credentials.\n\n### Expected result\n\n200 with administrator access and refresh tokens.\n\n### Variables saved\n\nadminAccessToken and adminRefreshToken.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                      "pm.test(\"Response is JSON\", () => pm.response.to.be.json);",
+                      "const body=pm.response.json();",
+                      "pm.collectionVariables.set(\"adminAccessToken\",body.accessToken);",
+                      "pm.collectionVariables.set(\"adminRefreshToken\",body.refreshToken);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "02 · List users as administrator",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/users?page=0&size={{pageSize}}&sort=username,asc",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "users?page=0&size=10&sort=username,asc"
+                  ]
+                },
+                "description": "### Purpose\n\nReturns a pageable user list using ROLE_ADMIN.\n\n### Prerequisites\n\nadminAccessToken populated by admin login.\n\n### Expected result\n\n200 pageable JSON containing registered users.\n\n### Variables saved\n\nNothing.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminAccessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                      "pm.test(\"Response is JSON\", () => pm.response.to.be.json);",
+                      "pm.test(\"Page contains users\", () => pm.expect(pm.response.json().content).to.be.an(\"array\").that.is.not.empty);"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "description": "Logs in the development-profile administrator and accesses the ROLE_ADMIN user-list endpoint.\n\n**Prerequisite:** Start the application with the `dev` profile or replace the admin variables with a real local administrator."
+        },
+        {
+          "name": "06 · WebAuthn Options, CSRF & CORS",
+          "item": [
+            {
+              "name": "01 · Obtain WebAuthn CSRF token and cookie",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/webauthn/csrf",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "webauthn",
+                    "csrf"
+                  ]
+                },
+                "description": "### Purpose\n\nCreates/reuses a WebAuthn session and obtains the CSRF token required by stateful WebAuthn POST/DELETE requests.\n\n### Prerequisites\n\nPostman cookie jar enabled.\n\n### Expected result\n\n200 JSON token plus XSRF-TOKEN Set-Cookie header.\n\n### Variables saved\n\ncsrfToken; matching cookies remain in Postman's cookie jar.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                      "pm.test(\"Response is JSON\", () => pm.response.to.be.json);",
+                      "const body=pm.response.json();",
+                      "pm.test(\"Cookie CSRF contract\", () => { pm.expect(body.headerName).to.eql(\"X-XSRF-TOKEN\"); pm.expect(body.token).to.be.a(\"string\").and.not.empty; pm.expect(pm.response.headers.get(\"Set-Cookie\")).to.include(\"XSRF-TOKEN\"); });",
+                      "pm.collectionVariables.set(\"csrfToken\",body.token);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "02 · Create passkey authentication options",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "X-XSRF-TOKEN",
+                    "value": "{{csrfToken}}",
+                    "description": "CSRF value captured from GET /webauthn/csrf."
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/webauthn/authenticate/options",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "webauthn",
+                    "authenticate",
+                    "options"
+                  ]
+                },
+                "description": "### Purpose\n\nRequests WebAuthn assertion options for the configured username.\n\n### Prerequisites\n\nRun Obtain WebAuthn CSRF token first in the same Postman session.\n\n### Expected result\n\n200 WebAuthn PublicKeyCredentialRequestOptions JSON.\n\n### Variables saved\n\nSession challenge is retained server-side.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                      "pm.test(\"Response is JSON\", () => pm.response.to.be.json);",
+                      "pm.test(\"Challenge returned\", () => pm.expect(pm.response.json().challenge).to.be.a(\"string\").and.not.empty);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "03 · Create passkey registration options",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "X-XSRF-TOKEN",
+                    "value": "{{csrfToken}}",
+                    "description": "CSRF value captured from GET /webauthn/csrf."
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/webauthn/register/options",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "webauthn",
+                    "register",
+                    "options"
+                  ]
+                },
+                "description": "### Purpose\n\nRequests WebAuthn registration options for the JWT-authenticated administrator used by the guided workflow. The endpoint behaves identically for any authenticated credential owner.\n\n### Prerequisites\n\nadminAccessToken plus csrfToken and matching session cookie. For individual normal-user testing, change Authorization to use {{accessToken}}.\n\n### Expected result\n\n200 WebAuthn PublicKeyCredentialCreationOptions JSON.\n\n### Variables saved\n\nSession challenge is retained for browser enrollment.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminAccessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                      "pm.test(\"Response is JSON\", () => pm.response.to.be.json);",
+                      "pm.test(\"Registration challenge\", () => { const body=pm.response.json(); pm.expect(body.challenge).to.be.a(\"string\").and.not.empty; pm.expect(body.user.name).to.eql(pm.collectionVariables.get(\"adminUsername\")); });"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "04 · Reject WebAuthn request without CSRF",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/webauthn/authenticate/options",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "webauthn",
+                    "authenticate",
+                    "options"
+                  ]
+                },
+                "description": "### Purpose\n\nProves WebAuthn POST endpoints reject a missing CSRF header.\n\n### Prerequisites\n\nNone; any retained cookie is acceptable.\n\n### Expected result\n\n403 Forbidden.\n\n### Variables saved\n\nNothing.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 403\", () => pm.response.to.have.status(403));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "05 · Allow trusted-origin CORS preflight",
+              "request": {
+                "method": "OPTIONS",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{allowedOrigin}}",
+                    "description": "Browser origin being evaluated by the centralized CORS policy."
+                  },
+                  {
+                    "key": "Access-Control-Request-Method",
+                    "value": "GET",
+                    "description": "HTTP method the browser intends to send."
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/users/me",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "users",
+                    "me"
+                  ]
+                },
+                "description": "### Purpose\n\nSimulates a browser preflight from an allowed origin.\n\n### Prerequisites\n\nallowedOrigin must match authkit.passkey.allowed-origins.\n\n### Expected result\n\n200 with matching CORS response headers.\n\n### Variables saved\n\nNothing.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                      "pm.test(\"Origin returned\", () => pm.expect(pm.response.headers.get(\"Access-Control-Allow-Origin\")).to.eql(\"http://localhost:3000\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "06 · Reject untrusted-origin CORS preflight",
+              "request": {
+                "method": "OPTIONS",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{untrustedOrigin}}",
+                    "description": "Browser origin being evaluated by the centralized CORS policy."
+                  },
+                  {
+                    "key": "Access-Control-Request-Method",
+                    "value": "GET",
+                    "description": "HTTP method the browser intends to send."
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/users/me",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "users",
+                    "me"
+                  ]
+                },
+                "description": "### Purpose\n\nSimulates a browser preflight from an untrusted origin.\n\n### Prerequisites\n\nuntrustedOrigin must not be allowlisted.\n\n### Expected result\n\n403 Invalid CORS request.\n\n### Variables saved\n\nNothing.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 403\", () => pm.response.to.have.status(403));"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "description": "Tests all WebAuthn server operations that do not require an authenticator: CSRF exchange, authentication options, registration options, missing-CSRF rejection, and CORS.\n\n**Important:** Keep Postman's cookie jar enabled. The guided workflow uses adminAccessToken for registration options because administrator login immediately precedes this folder. For an individual normal-user test, switch that request to accessToken."
+        },
+        {
+          "name": "07 · Administrator Cleanup",
+          "item": [
+            {
+              "name": "01 · Logout administrator",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "description": "Required JSON request media type."
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"refreshToken\":\"{{adminRefreshToken}}\"}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/auth/logout",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "logout"
+                  ]
+                },
+                "description": "### Purpose\n\nRevokes the administrator refresh token.\n\n### Prerequisites\n\nadminAccessToken and adminRefreshToken populated by admin login.\n\n### Expected result\n\n200 logout confirmation.\n\n### Variables saved\n\nNothing.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminAccessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+                      "pm.test(\"Response is JSON\", () => pm.response.to.be.json);"
+                    ]
+                  }
+                }
+              ]
+            }
+          ],
+          "description": "Revokes the administrator refresh token captured by admin login."
+        }
+      ]
+    },
+    {
+      "name": "02 — Browser Passkey Templates (Manual)",
+      "description": "These requests complete the API inventory but require data created by a real browser authenticator.\n\n## Before sending\n\n1. Complete normal-user registration and login.\n2. Obtain WebAuthn CSRF/session state.\n3. Request registration or authentication options.\n4. Use those options with `navigator.credentials.create()` or `navigator.credentials.get()` in a browser on an allowed origin.\n5. Serialize the browser credential to JSON and paste it into the matching collection variable.\n6. Set `runBrowserRequests=true`.\n7. Send only the relevant request.\n\nLeave `runBrowserRequests=false` for normal guided or whole-collection runs; these requests will be reported as skipped rather than sending empty authenticator payloads.",
+      "item": [
+        {
+          "name": "01 · Complete passkey registration",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.collectionVariables.get('runBrowserRequests') !== 'true') {",
+                  "  console.log('Skipped: set runBrowserRequests=true after pasting real browser authenticator output.');",
+                  "  pm.execution.skipRequest();",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response is JSON', () => pm.response.to.be.json);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": "Required JSON request media type."
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{csrfToken}}",
+                "type": "text",
+                "description": "CSRF value captured from GET /webauthn/csrf."
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{{webauthnRegistrationResponse}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/webauthn/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "webauthn",
+                "register"
+              ]
+            },
+            "description": "### Purpose\n\nSubmits the browser-created attestation and enrolls a passkey for the authenticated normal user.\n\n### Prerequisites\n\nNormal-user accessToken, matching WebAuthn CSRF/session, registration options, real navigator.credentials.create() output in webauthnRegistrationResponse, and runBrowserRequests=true.\n\n### Expected result\n\n200 successful registration response. Then list passkeys to obtain the stored credential identifier.\n\n### Variables saved\n\nNothing automatically; copy the credential ID returned by the passkey-list request into credentialId."
+          },
+          "response": []
+        },
+        {
+          "name": "02 · Complete passkey authentication and save tokens",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.collectionVariables.get('runBrowserRequests') !== 'true') {",
+                  "  console.log('Skipped: set runBrowserRequests=true after pasting real browser authenticator output.');",
+                  "  pm.execution.skipRequest();",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response is JSON', () => pm.response.to.be.json);",
+                  "const body = pm.response.json();",
+                  "pm.test('Tokens returned', () => { pm.expect(body.accessToken).to.be.a('string').and.not.empty; pm.expect(body.refreshToken).to.be.a('string').and.not.empty; });",
+                  "pm.collectionVariables.set('accessToken', body.accessToken);",
+                  "pm.collectionVariables.set('refreshToken', body.refreshToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "description": "Required JSON request media type."
+              },
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{csrfToken}}",
+                "type": "text",
+                "description": "CSRF value captured from GET /webauthn/csrf."
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{{webauthnAuthenticationResponse}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login/webauthn",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login",
+                "webauthn"
+              ]
+            },
+            "description": "### Purpose\n\nSubmits a browser-created passkey assertion. On success, AuthKit returns its normal JWT and refresh-token response.\n\n### Prerequisites\n\nMatching authentication-options session and CSRF token, real navigator.credentials.get() output in webauthnAuthenticationResponse, and runBrowserRequests=true.\n\n### Expected result\n\n200 with accessToken and refreshToken.\n\n### Variables saved\n\naccessToken and refreshToken."
+          },
+          "response": []
+        },
+        {
+          "name": "03 · Delete an enrolled passkey",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.collectionVariables.get('runBrowserRequests') !== 'true') {",
+                  "  console.log('Skipped: set runBrowserRequests=true after pasting real browser authenticator output.');",
+                  "  pm.execution.skipRequest();",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-XSRF-TOKEN",
+                "value": "{{csrfToken}}",
+                "type": "text",
+                "description": "CSRF value captured from GET /webauthn/csrf."
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/webauthn/register/{{credentialId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "webauthn",
+                "register",
+                "{{credentialId}}"
+              ]
+            },
+            "description": "### Purpose\n\nDeletes an enrolled passkey through Spring Security's ownership-checked endpoint.\n\n### Prerequisites\n\nAuthenticated owner accessToken, matching CSRF/session state, credentialId from passkey list, and runBrowserRequests=true.\n\n### Expected result\n\n200 when the credential exists and belongs to the authenticated user.\n\n### Variables saved\n\nNothing."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "noauth"
+  }
 }
