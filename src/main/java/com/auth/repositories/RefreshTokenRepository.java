@@ -13,8 +13,10 @@ import org.springframework.data.jpa.repository.Query;
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
 	Optional<RefreshToken> findByTokenHash(String tokenHash);
 
-	Optional<RefreshToken> findByUser(User user);
-	
+	@Modifying
+	@Query("DELETE FROM RefreshToken r WHERE r.user = :user")
+	int deleteByUser(User user);
+
 	@Modifying
 	@Query("DELETE FROM RefreshToken r WHERE r.tokenHash = :tokenHash")
 	int deleteByTokenHash(String tokenHash);

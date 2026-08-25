@@ -143,6 +143,33 @@ public class AuthControllerTest {
 	}
 
 	@Test
+	void testRepeatedLoginReplacesExistingRefreshToken() throws Exception {
+		LoginRequest request = new LoginRequest("testuser", "password123123");
+		String firstLoginResponse = mockMvc.perform(post("/api/auth/login")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)))
+				.andExpect(status().isOk())
+				.andReturn().getResponse().getContentAsString();
+
+		String secondLoginResponse = mockMvc.perform(post("/api/auth/login")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.accessToken").isNotEmpty())
+				.andExpect(jsonPath("$.refreshToken").isNotEmpty())
+				.andReturn().getResponse().getContentAsString();
+
+		String firstRefreshToken = objectMapper.readTree(firstLoginResponse).get("refreshToken").asString();
+		String secondRefreshToken = objectMapper.readTree(secondLoginResponse).get("refreshToken").asString();
+		assertThat(secondRefreshToken).isNotEqualTo(firstRefreshToken);
+
+		mockMvc.perform(post("/api/auth/refresh")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(new RefreshTokenRequest(firstRefreshToken))))
+				.andExpect(status().isUnauthorized());
+	}
+
+	@Test
 	void testLoginNormalizesUsername() throws Exception {
 		LoginRequest request = new LoginRequest("  TESTUSER  ", "password123123");
 

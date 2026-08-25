@@ -43,8 +43,9 @@ public class RefreshTokenService {
 
 	@Transactional
 	public String createRefreshToken(User user) {
-		// Clean up existing tokens for the user
-		refreshTokenRepository.findByUser(user).ifPresent(refreshTokenRepository::delete);
+		// Execute the delete before inserting so the one-token-per-user constraint
+		// cannot observe the old and replacement rows at the same time.
+		refreshTokenRepository.deleteByUser(user);
 
 		byte[] randomBytes = new byte[32];
 		SECURE_RANDOM.nextBytes(randomBytes);
