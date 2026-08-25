@@ -64,7 +64,7 @@ spring.datasource.url=jdbc:mysql://localhost:3306/authkit_lite
 spring.datasource.username=your_local_username
 spring.datasource.password=your_local_password
 
-app.jwt.secret=replace-with-a-long-random-local-development-secret
+JWT_SECRET=replace-with-a-long-random-local-development-secret
 ```
 
 Do not commit real credentials or production secrets.
@@ -118,7 +118,7 @@ Keep commits focused. Do not mix unrelated formatting, refactoring, and feature 
 ### Java and Spring
 
 - Use Java 21 features only when they improve clarity.
-- Follow Spring Boot 3 conventions.
+- Follow Spring Boot 4.1 conventions.
 - Prefer constructor injection.
 - Keep controllers thin.
 - Keep business logic in services.

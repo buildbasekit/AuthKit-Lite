@@ -12,9 +12,7 @@ out/
 
 # Maven
 
-.mvn/
-!/.mvn/wrapper/maven-wrapper.jar
-.mvn/wrapper/maven-wrapper.properties
+# Removed .mvn/ to ensure wrapper is tracked
 
 # Gradle
 
@@ -116,3 +114,6 @@ coverage/
 *.jar
 *.war
 *.ear
+
+# Allow maven wrapper jar
+!/.mvn/wrapper/maven-wrapper.jar

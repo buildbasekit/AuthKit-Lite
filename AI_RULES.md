@@ -59,7 +59,8 @@ Do not rename classes, packages, or endpoints without explicit instruction.
 
 ### 3.3 Preserve Stateless Security
 
-The app uses stateless JWT authentication. Do not introduce server sessions, form login, or cookie-based auth unless the task explicitly asks for a new security model.
+The app uses stateless JWT authentication via Spring Security Resource Server. Do not introduce server sessions, form login, or cookie-based auth unless the task explicitly asks for a new security model.
+Never introduce a custom JWT bearer request filter. Never manually parse access JWTs.
 
 ### 3.4 Protect New Endpoints
 
@@ -87,6 +88,7 @@ Do not switch to `USER` / `ADMIN` or mix naming styles unless performing a compl
 
 Passwords must be hashed with `PasswordEncoder` / BCrypt.
 Never store, log, return, or compare plain-text passwords outside the intended credential verification flow.
+Use `AuthenticationManager` for username/password authentication. Do not manually compare passwords.
 
 ### 3.7 Never Leak Tokens
 
@@ -224,7 +226,7 @@ Preferred patterns:
 - Add tests around security behavior.
 - Introduce profiles for development and production configuration.
 - Move demo seed data behind a development profile.
-- Replace `ddl-auto=update` with migrations when productionizing.
+- Replace `ddl-auto=update` with migrations when productionizing. Flyway owns schema changes. Hibernate validates the schema.
 
 ---
 
@@ -233,8 +235,8 @@ Preferred patterns:
 Treat these as high-risk and call them out clearly:
 
 - Editing `SecurityConfig`
-- Editing `JwtAuthenticationFilter`
-- Editing `JwtUtils`
+- Changing `TokenService`
+- Editing `RefreshTokenService` (Keep refresh-token lifecycle application-owned)
 - Editing `RefreshTokenService`
 - Changing token expiry or signing behavior
 - Changing role names or authority mapping

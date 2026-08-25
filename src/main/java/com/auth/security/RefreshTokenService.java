@@ -1,69 +1,114 @@
 package com.auth.security;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.auth.config.JwtProperties;
+import com.auth.dtos.TokenResponse;
 import com.auth.entities.RefreshToken;
 import com.auth.entities.User;
+import com.auth.exceptions.AccessDeniedBusinessException;
 import com.auth.exceptions.RefreshTokenException;
 import com.auth.repositories.RefreshTokenRepository;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.UUID;
 
 @Service
 public class RefreshTokenService {
 	private final RefreshTokenRepository refreshTokenRepository;
+	private final JwtProperties jwtProperties;
+	private final TokenService tokenService;
 
-	@Value("${app.jwt.refresh-token-expiration-ms}")
-	private Long refreshDurationMs;
-
-	private final JwtUtils jwtUtils;
-
-	public RefreshTokenService(RefreshTokenRepository refreshTokenRepository, JwtUtils jwtUtils) {
+	public RefreshTokenService(RefreshTokenRepository refreshTokenRepository, JwtProperties jwtProperties, TokenService tokenService) {
 		this.refreshTokenRepository = refreshTokenRepository;
-		this.jwtUtils = jwtUtils;
+		this.jwtProperties = jwtProperties;
+		this.tokenService = tokenService;
 	}
 
-	public RefreshToken createRefreshToken(User user) {
-		return refreshTokenRepository.findByUser(user).map(existing -> {
-			existing.setToken(UUID.randomUUID().toString());
-			existing.setExpiryDate(Instant.now().plusMillis(refreshDurationMs));
-			return refreshTokenRepository.save(existing);
-		}).orElseGet(() -> {
-			RefreshToken rt = new RefreshToken();
-			rt.setUser(user);
-			rt.setToken(UUID.randomUUID().toString());
-			rt.setExpiryDate(Instant.now().plusMillis(refreshDurationMs));
-			return refreshTokenRepository.save(rt);
-		});
+	private String hashToken(String rawToken) {
+		try {
+			MessageDigest md = MessageDigest.getInstance("SHA-256");
+			byte[] hash = md.digest(rawToken.getBytes(StandardCharsets.UTF_8));
+			return Base64.getEncoder().encodeToString(hash);
+		} catch (NoSuchAlgorithmException e) {
+			throw new RuntimeException("Could not hash token", e);
+		}
+	}
+
+	@Transactional
+	public String createRefreshToken(User user) {
+		// Clean up existing tokens for the user
+		refreshTokenRepository.findByUser(user).ifPresent(refreshTokenRepository::delete);
+
+		byte[] randomBytes = new byte[32];
+		new java.security.SecureRandom().nextBytes(randomBytes);
+		String rawToken = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
+		RefreshToken rt = new RefreshToken();
+		rt.setUser(user);
+		rt.setTokenHash(hashToken(rawToken));
+		rt.setExpiryDate(Instant.now().plusMillis(jwtProperties.refreshTokenTtl().toMillis()));
+		refreshTokenRepository.save(rt);
+		
+		return rawToken;
 	}
 
 	public boolean isExpired(RefreshToken token) {
 		return token.getExpiryDate().isBefore(Instant.now());
 	}
 
-	public RefreshToken findByToken(String token) {
-		return refreshTokenRepository.findByToken(token)
+	public RefreshToken findByHashedToken(String rawToken) {
+		return refreshTokenRepository.findByTokenHash(hashToken(rawToken))
 				.orElseThrow(() -> new RefreshTokenException("Refresh token not found"));
 	}
 
-	// Handle refresh flow
-	public String refreshAccessToken(String requestRefreshToken) {
-		RefreshToken token = findByToken(requestRefreshToken);
+	@Transactional
+	public TokenResponse refreshAccessToken(String requestRefreshToken) {
+		RefreshToken token = findByHashedToken(requestRefreshToken);
 
 		if (isExpired(token)) {
 			refreshTokenRepository.delete(token);
 			throw new RefreshTokenException("Refresh token expired, login again");
 		}
 
-		var roles = token.getUser().getRoles().stream().map(r -> r.getName()).toList();
-		return jwtUtils.generateAccessToken(token.getUser().getUsername(), token.getUser().getId(), roles);
+		User user = token.getUser();
+		if (!user.isEnabled()) {
+			refreshTokenRepository.delete(token);
+			throw new AccessDeniedBusinessException("User account is disabled");
+		}
+
+		// Rotation: Delete old token atomically
+		int deletedCount = refreshTokenRepository.deleteByTokenHash(token.getTokenHash());
+		if (deletedCount == 0) {
+			// Token was already deleted by another concurrent request
+			throw new RefreshTokenException("Refresh token was already used or revoked");
+		}
+		
+		String newRawRefreshToken = createRefreshToken(user);
+
+		var roles = user.getRoles().stream().map(r -> r.getName()).toList();
+		String newAccessToken = tokenService.generateAccessToken(user.getUsername(), user.getId(), roles);
+		
+		return new TokenResponse(
+				newAccessToken,
+				newRawRefreshToken,
+				"Bearer",
+				jwtProperties.accessTokenTtl().toSeconds(),
+				jwtProperties.refreshTokenTtl().toSeconds()
+		);
 	}
 
-	// Handle logout flow
+	@Transactional
 	public void logout(String requestRefreshToken) {
-		RefreshToken token = findByToken(requestRefreshToken);
-		refreshTokenRepository.delete(token);
+		try {
+			RefreshToken token = findByHashedToken(requestRefreshToken);
+			refreshTokenRepository.deleteByTokenHash(token.getTokenHash());
+		} catch (RefreshTokenException ignored) {
+			// If it's already invalid or deleted, we don't care on logout.
+		}
 	}
 }

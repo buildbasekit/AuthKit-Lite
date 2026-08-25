@@ -18,22 +18,13 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "const json = pm.response.json();\r",
-                  "\r",
-                  "// Set access token\r",
-                  "if (json.accessToken) {\r",
-                  "    pm.environment.set(\"access_token\", json.accessToken);\r",
-                  "} else {\r",
-                  "    console.error(\"No accessToken found in response\");\r",
-                  "}\r",
-                  "\r",
-                  "// Set refresh token\r",
-                  "if (json.refreshToken) {\r",
-                  "    pm.environment.set(\"refresh_token\", json.refreshToken);\r",
-                  "} else {\r",
-                  "    console.error(\"No refreshToken found in response\");\r",
-                  "}\r",
-                  ""
+                  "const jsonData = pm.response.json();",
+                  "",
+                  "pm.test(\"Token expiration should be present\", function () {",
+                  "    pm.expect(jsonData.expiresInSeconds).to.be.a('number');",
+                  "    pm.environment.set(\"access_token\", jsonData.accessToken);",
+                  "    pm.environment.set(\"refresh_token\", jsonData.refreshToken);",
+                  "});"
                 ],
                 "type": "text/javascript",
                 "packages": {}
@@ -45,7 +36,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"username\":\"admin\",\r\n    \"password\":\"admin123\"\r\n}",
+              "raw": "{\r\n    \"username\":\"admin\",\r\n    \"password\":\"password123123\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -73,7 +64,9 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  ""
+                  "const jsonData = pm.response.json();",
+                  "pm.environment.set(\"access_token\", jsonData.accessToken);",
+                  "pm.environment.set(\"refresh_token\", jsonData.refreshToken);"
                 ],
                 "type": "text/javascript",
                 "packages": {}
@@ -154,7 +147,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"username\":\"boiler_agents\",\r\n    \"email\":\"boileragents@gmail.com\",\r\n    \"password\":\"0000\"\r\n}",
+              "raw": "{\r\n    \"username\":\"boiler_agents\",\r\n    \"email\":\"boileragents@gmail.com\",\r\n    \"password\":\"password123123\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -220,88 +213,6 @@
             }
           },
           "response": []
-        },
-        {
-          "name": "Users | Profile [GET]",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/api/users/profile",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "users",
-                "profile"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Users | Restricted [GET]",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/api/users/restricted",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "users",
-                "restricted"
-              ]
-            }
-          },
-          "response": []
         }
       ]
     },
@@ -336,55 +247,13 @@
               }
             },
             "url": {
-              "raw": "{{base_url}}/api/users/all",
+              "raw": "{{base_url}}/api/users",
               "host": [
                 "{{base_url}}"
               ],
               "path": [
                 "api",
-                "users",
-                "all"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Users | Admin-only [GET] (Admin)",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/api/users/admin-only",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "users",
-                "admin-only"
+                "users"
               ]
             }
           },
@@ -420,7 +289,7 @@
   "variable": [
     {
       "key": "base_url",
-      "value": ""
+      "value": "http://localhost:8080"
     },
     {
       "key": "access_token",

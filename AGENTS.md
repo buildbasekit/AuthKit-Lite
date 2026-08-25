@@ -27,7 +27,7 @@ Keep the existing `CONTRIBUTING.md` for human contributors. Do not replace it.
 - **Security model:** Stateless JWT access tokens + refresh tokens
 - **Authorization model:** Role-based access control using Spring Security authorities
 - **Current roles:** `ROLE_USER`, `ROLE_ADMIN`
-- **JWT library:** Auth0 Java JWT
+- **JWT library:** Spring Security Resource Server (Nimbus JWT)
 - **Password hashing:** BCrypt through Spring Security
 
 ---
@@ -57,14 +57,12 @@ Important: this repository already has a human-facing `CONTRIBUTING.md`. Do not 
 src/main/java/com/auth/
 ├── AuthKitApplication.java
 ├── config/
-│   ├── DataInitializer.java
+│   └── DemoDataInitializer.java
 │   └── SecurityConfig.java
 ├── controllers/
 │   ├── AuthController.java
 │   └── UserController.java
 ├── dtos/
-│   ├── ErrorResponse.java
-│   ├── JwtResponse.java
 │   ├── LoginRequest.java
 │   ├── RegisterRequest.java
 │   ├── UserProfileDto.java
@@ -86,8 +84,6 @@ src/main/java/com/auth/
 │   └── UserRepository.java
 ├── security/
 │   ├── AuthService.java
-│   ├── JwtAuthenticationFilter.java
-│   ├── JwtUtils.java
 │   └── RefreshTokenService.java
 └── services/
     └── UserService.java
@@ -155,9 +151,15 @@ Keep auth/security logic in the existing security/service layers:
 
 - `AuthService` handles registration and login workflows.
 - `RefreshTokenService` handles refresh-token lifecycle.
-- `JwtUtils` handles JWT creation, parsing, expiry, and validation.
-- `JwtAuthenticationFilter` reads bearer tokens and populates Spring Security context.
+- `TokenService` integrates with `JwtEncoder` to generate access tokens.
 - `UserService` handles user-facing business queries and user DTO conversion.
+
+> **CRITICAL ARCHITECTURE RULES:**
+> - Do not create a custom JWT request filter.
+> - Do not manually parse access JWTs.
+> - Do not perform password comparison manually.
+> - Use Spring Security Resource Server and `AuthenticationManager`.
+> - Keep refresh-token lifecycle application-owned and atomic.
 
 ### Repositories
 
@@ -192,23 +194,15 @@ These are not blockers for normal development, but AI agents should keep them vi
 
 ### 7.1 Demo Credentials
 
-`DataInitializer` creates default roles and demo users. This is useful for local development, but should be guarded behind a development profile or removed before production deployment.
+`DemoDataInitializer` creates default roles and demo users if the `dev` profile is active. This is useful for local development, but should never be enabled in production.
 
 ### 7.2 Logout Error Handling
 
 `AuthController.logout` should not return `null` if logout fails. Prefer consistent exception handling through `GlobalExceptionHandler` and a meaningful `ErrorResponse`.
 
-### 7.3 H2 Console Permit Rule
+### 7.3 Database Migrations
 
-`SecurityConfig` permits `/h2-console/**` and configures frame options for development convenience. The current application properties are MySQL-oriented, so this should be reviewed before production hardening.
-
-### 7.4 Validation
-
-Request DTOs should ideally use Jakarta Bean Validation annotations such as `@NotBlank`, `@Email`, and `@Size`. If validation is added, include the required Spring validation dependency and controller-level `@Valid` usage.
-
-### 7.5 Database Migrations
-
-The current setup uses Hibernate DDL behavior through configuration. For production readiness, prefer Flyway or Liquibase migrations instead of relying on `ddl-auto=update`.
+The current setup uses Flyway for schema creation and Hibernate's `validate` mode. Do not change `ddl-auto` back to `update`. Flyway is the absolute source of truth for the database schema.
 
 ---
 

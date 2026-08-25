@@ -1,78 +1,104 @@
-# AuthKit-Lite 🔐
+# AuthKit-Lite
 
-Minimal Spring Boot JWT authentication boilerplate to add secure login and RBAC in minutes.
+AuthKit-Lite is a lean, secure, and modern Spring Boot authentication boilerplate. It provides a robust starting point for REST APIs requiring JWT-based authentication, role-based authorization, and secure session management via refresh tokens.
 
-👉 Get full details & documentation: https://buildbasekit.com/boilerplates/authkit-lite/  
-⭐ Star this repo if it saves you time
+## Tech Stack
+- **Spring Boot 4.1.0**
+- **Java 21**
+- **Spring Security** (OAuth2 Resource Server)
+- **Spring Data JPA** / **Hibernate**
+- **MySQL** 
+- **Flyway** (Database migrations)
+- **Testcontainers** (Isolated integration testing)
+
+## Core Features
+- 🚀 **Stateless JWT Access Tokens**: Generated securely using Spring Security's native `JwtEncoder` and verified via `JwtDecoder` (HS256).
+- 🔄 **Secure Refresh Token Rotation**: Refresh tokens are hashed via SHA-256 before storage. Concurrent refresh attempts are atomically protected. AuthKit-Lite maintains one active refresh session per user. A new login replaces the user's previous refresh token.
+- 🔐 **Role-Based Authorization**: Endpoints are secured natively using Spring Security's `@PreAuthorize` (e.g., `ROLE_USER`, `ROLE_ADMIN`).
+- 🔑 **Passkeys / WebAuthn**: Built-in support for biometric authentication, security keys, and device PINs leveraging Spring Security 7 WebAuthn integration.
+- 🛑 **Configuration Validation**: Fails fast on startup if JWT or WebAuthn properties are misconfigured.
+- 🐳 **Testcontainers Isolation**: A fully decoupled integration test suite that spins up an ephemeral MySQL container, keeping your local dev DB clean.
 
 ---
 
-## ❌ The Problem
+## Getting Started
 
-Setting up authentication in Spring Boot usually means:
-- writing JWT logic from scratch  
-- configuring Spring Security manually  
-- repeating the same setup in every project  
+### 1. Prerequisites
+- Java 21+
+- MySQL 8.0+ (For running locally)
+- Docker (Required for running tests via Testcontainers)
 
----
-
-## ✅ The Solution
-
-AuthKit-Lite gives you a ready-to-use authentication system with JWT, RBAC, and clean structure so you can start building features immediately.
-
----
-
-## ⚡ Quick Start
-
-### 1. Clone the repository
-Download or clone the project from GitHub.
+### 2. Configuration
+Create a database in your MySQL instance (e.g., `authkit_db`). The application uses environment variables for secure configuration. You can export these or configure them in your IDE:
 
 ```bash
-git clone https://github.com/buildbasekit/AuthKit-Lite
-cd AuthKit-Lite
-````
+export DB_URL=jdbc:mysql://localhost:3306/authkit_db
+export DB_USERNAME=root
+export DB_PASSWORD=your_password
+export JWT_SECRET=super-secure-secret-that-is-at-least-32-chars-long
+export JWT_ISSUER=authkit
+export JWT_AUDIENCE=authkit-api
+```
 
-### 2. Configure environment
+### 3. Run the Application
+The repository includes a Maven Wrapper, meaning you do not need Maven installed globally.
 
-Set database and JWT properties in `application.properties`.
+```bash
+# Run locally (default profile)
+./mvnw spring-boot:run
 
-### 3. Run the application
+# Run with demo users seeded (dev profile)
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+```
 
-Start the Spring Boot app and begin testing APIs with **provided Postman collection**.
+When running, Flyway will automatically apply the baseline schema (`V1__init_schema.sql`).
 
----
+### 4. Testing
+Tests rely on Docker and Testcontainers to guarantee isolation.
 
-## 🚀 Features
+```bash
+# Run tests
+./mvnw clean test
 
-* JWT authentication (stateless, refresh tokens)
-* User signup & login APIs
-* Secure password hashing
-* Role-based access control (RBAC)
-* Clean and minimal project structure
-
----
-
-## 🎯 Use Cases
-
-* SaaS authentication systems
-* Admin dashboards
-* Secure REST APIs
-* Backend starter projects
-
----
-
-## 🚀 Need a Production-Ready Backend?
-
-Get a complete backend with:
-
-- Authentication  
-- File storage (S3)  
-- Clean architecture  
-
-👉 FiloraFS-Pro  
-[https://buildbasekit.gumroad.com/l/filorafs-pro-self-hosted-file-storage](https://buildbasekit.gumroad.com/l/filorafs-pro-self-hosted-file-storage)
+# Package the application
+./mvnw clean verify
+```
 
 ---
 
-Built by BuildBaseKit
-[https://buildbasekit.com](https://buildbasekit.com)
+## API Endpoints
+
+### Authentication
+- `POST /api/auth/register`: Register a new user. Minimum password length is 12 characters.
+- `POST /api/auth/login`: Authenticate and receive `accessToken` and `refreshToken`.
+- `POST /api/auth/refresh`: Rotate refresh token and issue a new access token.
+- `POST /api/auth/logout`: Revoke the refresh token.
+
+### WebAuthn / Passkeys
+- `POST /webauthn/register/options`: Initiate passkey registration.
+- `POST /webauthn/register`: Complete passkey registration.
+- `POST /webauthn/authenticate/options`: Initiate passkey authentication.
+- `POST /webauthn/authenticate`: Complete passkey authentication.
+
+### Users (Protected)
+- `GET /api/users/me`: Fetch profile of the currently authenticated user.
+- `GET /api/users/me/passkeys`: List all registered passkeys for the user.
+- `DELETE /api/users/me/passkeys/{id}`: Delete a specific passkey.
+- `GET /api/users`: Fetch a paginated list of all users (Requires `ROLE_ADMIN`).
+
+---
+
+## Postman Collection
+An up-to-date Postman collection (`Auth-Kit API Collection.postman_collection.json`) is included in the root directory.
+It features automatic pre-request and test scripts that extract tokens on login/refresh and inject them into your Postman environment.
+
+## Production Considerations
+Before deploying to production:
+1. Ensure the `dev` profile is disabled to prevent seeding demo credentials.
+2. Provide a highly entropic, securely managed `JWT_SECRET`.
+3. Implement **rate limiting** at your API Gateway or reverse proxy, as this application focuses purely on authentication logic and does not implement application-level throttling.
+4. Host over HTTPS/TLS to protect bearer tokens in transit.
+
+## Documentation Reference
+- [Architecture Details](ARCHITECTURE.md)
+- [Security Guarantees](SECURITY.md)

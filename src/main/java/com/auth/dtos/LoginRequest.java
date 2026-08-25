@@ -1,13 +1,8 @@
 package com.auth.dtos;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.NotBlank;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class LoginRequest {
-	private String username;
-	private String password;
-}
+public record LoginRequest(
+	@NotBlank(message = "Username is required") String username,
+	@NotBlank(message = "Password is required") String password
+) {}

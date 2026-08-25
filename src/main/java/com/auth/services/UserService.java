@@ -16,8 +16,6 @@ public class UserService {
 
 	private final UserRepository userRepository;
 
-	public static final String ROLE_ADMIN = "ROLE_ADMIN";
-
 	public UserService(UserRepository userRepository) {
 		this.userRepository = userRepository;
 	}
@@ -31,23 +29,8 @@ public class UserService {
 		return new UserProfileDto(user.getId(), user.getUsername(), user.getEmail(), roles, user.isEnabled());
 	}
 
-	public java.util.List<UserSummaryDto> getAllUsers() {
-		return userRepository.findAll().stream().map(u -> new UserSummaryDto(u.getId(), u.getUsername(), u.getEmail()))
-				.toList();
-	}
-
-	/**
-	 * Example business rule: Only ADMINs may access this resource. (Shows how to
-	 * enforce business logic beyond @PreAuthorize.)
-	 */
-	public String restrictedResource(String username) {
-		User user = userRepository.findByUsername(username)
-				.orElseThrow(() -> new AccessDeniedBusinessException("User not found: " + username));
-
-		boolean isAdmin = user.getRoles().stream().anyMatch(r -> ROLE_ADMIN.equals(r.getName()));
-		if (!isAdmin) {
-			throw new AccessDeniedBusinessException("Basic users cannot access this resource");
-		}
-		return "Welcome privileged user";
+	public org.springframework.data.domain.Page<UserSummaryDto> getAllUsers(org.springframework.data.domain.Pageable pageable) {
+		return userRepository.findAll(pageable)
+				.map(u -> new UserSummaryDto(u.getId(), u.getUsername(), u.getEmail()));
 	}
 }

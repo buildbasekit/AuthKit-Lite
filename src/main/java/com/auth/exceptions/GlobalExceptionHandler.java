@@ -2,89 +2,69 @@ package com.auth.exceptions;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.ProblemDetail;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
-import com.auth.dtos.ErrorResponse;
-
-import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 @RestControllerAdvice
-public class GlobalExceptionHandler {
-
-	// Custom Exceptions
+public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
 	@ExceptionHandler(UsernameAlreadyExistsException.class)
-	public ResponseEntity<ErrorResponse> handleUsernameExists(UsernameAlreadyExistsException ex,
-			HttpServletRequest request) {
-		return buildError(HttpStatus.CONFLICT, ex.getMessage(), "USERNAME_ALREADY_EXISTS", request);
+	public ProblemDetail handleUsernameExists(UsernameAlreadyExistsException ex) {
+		return buildProblemDetail(HttpStatus.CONFLICT, ex.getMessage(), "USERNAME_ALREADY_EXISTS");
 	}
 
 	@ExceptionHandler(EmailAlreadyExistsException.class)
-	public ResponseEntity<ErrorResponse> handleEmailExists(EmailAlreadyExistsException ex, HttpServletRequest request) {
-		return buildError(HttpStatus.CONFLICT, ex.getMessage(), "EMAIL_ALREADY_EXISTS", request);
+	public ProblemDetail handleEmailExists(EmailAlreadyExistsException ex) {
+		return buildProblemDetail(HttpStatus.CONFLICT, ex.getMessage(), "EMAIL_ALREADY_EXISTS");
 	}
 
 	@ExceptionHandler(InvalidCredentialsException.class)
-	public ResponseEntity<ErrorResponse> handleInvalidCredentials(InvalidCredentialsException ex,
-			HttpServletRequest request) {
-		return buildError(HttpStatus.UNAUTHORIZED, ex.getMessage(), "INVALID_CREDENTIALS", request);
+	public ProblemDetail handleInvalidCredentials(InvalidCredentialsException ex) {
+		return buildProblemDetail(HttpStatus.UNAUTHORIZED, ex.getMessage(), "INVALID_CREDENTIALS");
 	}
 
 	@ExceptionHandler(RefreshTokenException.class)
-	public ResponseEntity<ErrorResponse> handleRefreshToken(RefreshTokenException ex, HttpServletRequest request) {
-		return buildError(HttpStatus.FORBIDDEN, ex.getMessage(), "INVALID_REFRESH_TOKEN", request);
+	public ProblemDetail handleRefreshToken(RefreshTokenException ex) {
+		return buildProblemDetail(HttpStatus.UNAUTHORIZED, ex.getMessage(), "INVALID_REFRESH_TOKEN");
 	}
 
 	@ExceptionHandler(AccessDeniedBusinessException.class)
-	public ResponseEntity<ErrorResponse> handleBusinessAccessDenied(AccessDeniedBusinessException ex,
-			HttpServletRequest request) {
-		return buildError(HttpStatus.FORBIDDEN, ex.getMessage(), "BUSINESS_ACCESS_DENIED", request);
+	public ProblemDetail handleBusinessAccessDenied(AccessDeniedBusinessException ex) {
+		return buildProblemDetail(HttpStatus.FORBIDDEN, ex.getMessage(), "BUSINESS_ACCESS_DENIED");
 	}
 
-	// General Exceptions
-	
 	@ExceptionHandler(AccessDeniedException.class)
-	public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
-	    ErrorResponse error = new ErrorResponse(
-	        HttpStatus.FORBIDDEN.value(),
-	        "Forbidden",
-	        "You do not have permission to access this resource",
-	        "ACCESS_DENIED",
-	        request.getRequestURI()
-	    );
-	    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+	public ProblemDetail handleAccessDenied(AccessDeniedException ex) {
+		return buildProblemDetail(HttpStatus.FORBIDDEN, "You do not have permission to access this resource", "ACCESS_DENIED");
 	}
 
-	@ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
-	public ResponseEntity<ErrorResponse> handleValidation(
-			org.springframework.web.bind.MethodArgumentNotValidException ex, HttpServletRequest request) {
-
-		String message = ex.getBindingResult().getFieldErrors().stream()
-				.map(err -> err.getField() + ": " + err.getDefaultMessage()).findFirst().orElse("Validation failed");
-
-		return buildError(HttpStatus.BAD_REQUEST, message, "VALIDATION_ERROR", request);
+	@ExceptionHandler(org.springframework.security.core.AuthenticationException.class)
+	public ProblemDetail handleAuthentication(org.springframework.security.core.AuthenticationException ex) {
+		return buildProblemDetail(HttpStatus.UNAUTHORIZED, "Authentication failed", "UNAUTHORIZED");
 	}
 
 	@ExceptionHandler(DataIntegrityViolationException.class)
-	public ResponseEntity<ErrorResponse> handleDataIntegrity(DataIntegrityViolationException ex,
-			HttpServletRequest request) {
-		return buildError(HttpStatus.CONFLICT, "Duplicate or invalid data: " + ex.getMostSpecificCause().getMessage(),
-				"DATA_INTEGRITY_ERROR", request);
+	public ProblemDetail handleDataIntegrity(DataIntegrityViolationException ex) {
+		return buildProblemDetail(HttpStatus.CONFLICT, "Duplicate or invalid data provided", "DATA_INTEGRITY_ERROR");
+	}
+
+	@ExceptionHandler(RuntimeException.class)
+	public org.springframework.http.ResponseEntity<ProblemDetail> handleRuntimeException(RuntimeException ex) {
+		ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+		return org.springframework.http.ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problemDetail);
 	}
 
 	@ExceptionHandler(Exception.class)
-	public ResponseEntity<ErrorResponse> handleGeneral(Exception ex, HttpServletRequest request) {
-		return buildError(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred", "GENERIC_ERROR", request);
+	public ProblemDetail handleGeneral(Exception ex) {
+		return buildProblemDetail(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred", "GENERIC_ERROR");
 	}
 
-	// helper method
-	private ResponseEntity<ErrorResponse> buildError(HttpStatus status, String message, String code,
-			HttpServletRequest request) {
-		ErrorResponse error = new ErrorResponse(status.value(), status.getReasonPhrase(), message, code,
-				request.getRequestURI());
-		return ResponseEntity.status(status).body(error);
+	private ProblemDetail buildProblemDetail(HttpStatus status, String detail, String code) {
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, detail);
+		problem.setProperty("code", code);
+		return problem;
 	}
 }
