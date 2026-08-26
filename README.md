@@ -1,6 +1,6 @@
-# AuthKit-Lite
+# AuthKit-Lite by BuildBaseKit
 
-AuthKit-Lite is a lean, secure, and modern Spring Boot authentication boilerplate. It provides a robust starting point for REST APIs requiring JWT-based authentication, role-based authorization, and secure session management via refresh tokens.
+AuthKit-Lite is a lean, secure, and modern Spring Boot authentication boilerplate from [BuildBaseKit](https://buildbasekit.com/boilerplates/authkit-lite/). It provides a robust starting point for REST APIs requiring JWT-based authentication, role-based authorization, and secure session management via refresh tokens.
 
 ## Tech Stack
 - **Spring Boot 4.1.1**
@@ -38,6 +38,10 @@ export DB_PASSWORD=your_password
 export JWT_SECRET=super-secure-secret-that-is-at-least-32-chars-long
 export JWT_ISSUER=authkit
 export JWT_AUDIENCE=authkit-api
+export PASSKEY_ENABLED=true
+export PASSKEY_RP_NAME="BuildBaseKit AuthKit-Lite"
+export PASSKEY_RP_ID=localhost
+export PASSKEY_ALLOWED_ORIGINS=http://localhost:8080,http://localhost:3000
 ```
 
 ### 3. Run the Application
@@ -47,7 +51,7 @@ The repository includes a Maven Wrapper, meaning you do not need Maven installed
 # Run locally (default profile)
 ./mvnw spring-boot:run
 
-# Run with demo users seeded (dev profile)
+# Run with demo users, passkeys, and the browser API console enabled
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
@@ -91,7 +95,7 @@ Tests rely on Docker and Testcontainers to guarantee isolation.
 - `GET /actuator`: Public discovery links for the exposed actuator endpoints.
 - `GET /actuator/health`: Public health status.
 - `GET /actuator/info`: Public application information.
-- `GET /api-test/index.html`: Dependency-free browser API test console.
+- `GET /api-test/index.html`: Dependency-free browser API test console (available only when `authkit.test-console.enabled=true`; the `dev` profile enables it).
 
 The `/api/**` chain is stateless and uses Bearer tokens, so CSRF is disabled only for that chain. WebAuthn endpoints retain Spring Security's session-backed ceremony state and cookie CSRF protection. CORS credentials are accepted only from the origins configured by `authkit.passkey.allowed-origins`.
 
@@ -103,9 +107,9 @@ It creates a unique test user, chains access/refresh tokens, exercises CSRF and 
 
 ## Browser API Test Console
 
-The project includes a zero-build static test client at `src/main/resources/static/api-test/index.html`. It can exercise every endpoint individually, run a combined JWT workflow, or run the complete workflow with a real browser passkey. Every frontend asset for this developer tool is intentionally contained in `src/main/resources/static/api-test/`; it has no package-manager, build-step, or remote runtime dependency.
+The project includes a BuildBaseKit-branded, zero-build static test client at `src/main/resources/static/api-test/index.html`. It can exercise every endpoint individually, run a combined JWT workflow, or run the complete workflow with a real browser passkey. Every frontend asset for this developer tool is intentionally contained in `src/main/resources/static/api-test/`; it has no package-manager, build-step, or remote runtime dependency.
 
-> **Required when reusing this boilerplate:** Before using AuthKit-Lite as the foundation for your next project, delete the entire `src/main/resources/static/api-test/` directory. The console is development tooling, not an application feature, and removing the complete self-contained folder prevents it from being exposed or misused in a deployed project. Also remove or update the console-specific assertions in `OperationalEndpointTest` if you keep that test class.
+The console is denied by default and enabled by `application-dev.properties`. Never activate the `dev` profile in production. A controlled non-dev environment can opt in with `AUTHKIT_TEST_CONSOLE_ENABLED=true`, but this should remain exceptional.
 
 1. Start the application with the development profile so the administrator checks can use the seeded account:
 
@@ -126,8 +130,12 @@ Before deploying to production:
 2. Provide a highly entropic, securely managed `JWT_SECRET`.
 3. Implement **rate limiting** at your API Gateway or reverse proxy, as this application focuses purely on authentication logic and does not implement application-level throttling.
 4. Host over HTTPS/TLS to protect bearer tokens in transit.
-5. Delete `src/main/resources/static/api-test/` before using this boilerplate for a new project. The console does not bypass endpoint security, but removing the self-contained developer frontend prevents it from being exposed or misused in a deployed application.
+5. Keep `AUTHKIT_TEST_CONSOLE_ENABLED=false` (the default) and never activate the `dev` profile.
+6. Configure `PASSKEY_ENABLED=true`, `PASSKEY_RP_ID`, and `PASSKEY_ALLOWED_ORIGINS` only when the production HTTPS origin is ready. Passkeys are disabled by default outside development.
+7. The application uses graceful shutdown with a configurable `SHUTDOWN_TIMEOUT` (default `30s`); configure the deployment platform's termination grace period accordingly.
 
 ## Documentation Reference
 - [Architecture Details](ARCHITECTURE.md)
 - [Security Guarantees](SECURITY.md)
+- [Spring Boot 4.1.1 system requirements](https://docs.spring.io/spring-boot/system-requirements.html)
+- [Spring Security passkey reference](https://docs.spring.io/spring-security/reference/servlet/authentication/passkeys.html)

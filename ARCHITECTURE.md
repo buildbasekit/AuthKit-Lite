@@ -20,7 +20,7 @@ When a user submits their credentials (`LoginRequest`), the flow is:
 3. **`AuthenticationManager`** → **`DaoAuthenticationProvider`**: Uses the `DatabaseUserDetailsService` to fetch the user and `PasswordEncoder` (BCrypt) to verify the password securely.
 4. **Token Generation**: Upon successful authentication:
    - `TokenService` uses `JwtEncoder` to generate a short-lived stateless JWT access token.
-   - `RefreshTokenService` generates a random secure bytes, encodes to URL-safe Base64, hashes it via SHA-256, and stores the hash (`token_hash`) in the `refresh_tokens` table. It also atomically deletes any existing refresh tokens for the user, maintaining a one-active-session policy.
+   - `RefreshTokenService` generates secure random bytes, encodes them as URL-safe Base64, hashes the token via SHA-256, and stores only the hash (`token_hash`) in the `refresh_tokens` table. It deletes any existing refresh token for the user, maintaining a one-active-session policy.
 5. **Response**: Returns both the JWT and the raw refresh token to the client.
 
 ---
@@ -43,8 +43,8 @@ When the client makes a request to a protected endpoint, they send the JWT in th
 
 When the access token expires, the client submits their raw refresh token to `/api/auth/refresh`:
 
-1. **Hashing & Lookup**: `RefreshTokenService` hashes the raw token (SHA-256) and performs an atomic lookup/delete against the database (`DELETE FROM RefreshToken r WHERE r.tokenHash = :tokenHash`).
-2. **Concurrency Protection**: The atomic delete ensures that if two requests attempt to use the same token simultaneously, only one succeeds.
+1. **Hashing & Locking**: `RefreshTokenService` hashes the raw token (SHA-256) and loads the matching database row with a pessimistic write lock.
+2. **Concurrency Protection**: Concurrent replay attempts serialize on that row. The winner consumes and replaces it; waiting requests then observe that the old row no longer exists and receive `401 Unauthorized`.
 3. **Validation**: The service verifies the token hasn't expired and the associated user account is still enabled (`user.isEnabled()`).
 4. **Rotation**: A new raw refresh token is generated, hashed, and persisted. A new access token is generated.
 5. **Response**: The client receives the new access and refresh tokens.
@@ -58,7 +58,7 @@ To support modern passwordless authentication, AuthKit-Lite integrates Spring Se
 1. **Ordered Filter Chain Design**:
    - Order 1, `/webauthn/**` and `/login/webauthn`: Uses Spring Security WebAuthn, accepts JWT authentication for registration/credential management, keeps temporary ceremony state in the HTTP session, and uses `CookieCsrfTokenRepository`. Only CSRF retrieval, authentication options, and assertion submission are public.
    - Order 2, `/api/**`: Strictly stateless, authenticates standard JWT Bearer tokens, and disables CSRF because it does not use browser cookies for authentication.
-   - Order 3, fallback: Permits the static `/api-test/**` browser test assets, actuator discovery links, and the exposed `health` and `info` endpoints, and denies every other unmatched request.
+   - Order 3, fallback: Permits the static `/api-test/**` browser test assets only when `authkit.test-console.enabled=true`, permits actuator discovery links plus the exposed `health` and `info` endpoints, and denies every other unmatched request. The console is disabled by default and enabled by the `dev` profile.
 2. **Credential Persistence**:
    - We use Spring Security's native `JdbcUserCredentialRepository` and `JdbcPublicKeyCredentialUserEntityRepository`.
    - The database contains `user_credentials` and `user_entities`, using the exact column contract expected by Spring Security 7.1's JDBC repositories.
@@ -79,4 +79,4 @@ To support modern passwordless authentication, AuthKit-Lite integrates Spring Se
 
 - **Testcontainers**: Tests use an isolated MySQL 8.4 container managed by Spring Boot 4.1.1's `@ServiceConnection` and Testcontainers 2 integration. This guarantees tests never pollute or depend on the developer's local database.
 - **MockMvc**: End-to-end integration tests use `MockMvc` to rigorously test API boundaries, assertions, validation, and JSON structures.
-- **Browser API Test Console**: Static HTML, CSS, and JavaScript under `src/main/resources/static/api-test/` provide a same-origin manual client without adding a frontend runtime or dependency. A locally double-clicked `index.html` acts only as a launcher and redirects to the server-hosted `localhost` copy so WebAuthn has a valid RP origin. The client preserves WebAuthn ceremony state through the browser session cookie, sends the cookie-backed CSRF token, delegates credential creation/assertion to `navigator.credentials`, and keeps JWT/refresh tokens only in memory.
+- **Browser API Test Console**: BuildBaseKit-branded static HTML, CSS, JavaScript, and logo assets under `src/main/resources/static/api-test/` provide a same-origin manual client without adding a frontend runtime or dependency. A locally double-clicked `index.html` acts only as a launcher and redirects to the server-hosted `localhost` copy so WebAuthn has a valid RP origin. The client preserves WebAuthn ceremony state through the browser session cookie, sends the cookie-backed CSRF token, delegates credential creation/assertion to `navigator.credentials`, and keeps JWT/refresh tokens only in memory. Security configuration denies the assets unless the console is explicitly enabled.

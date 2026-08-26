@@ -1,7 +1,7 @@
 {
   "info": {
     "_postman_id": "4b8284db-9b5e-4c4b-a4f3-authkitlite41",
-    "name": "AuthKit-Lite API — Human Test Suite",
+    "name": "BuildBaseKit AuthKit-Lite API — Human Test Suite",
     "description": "# AuthKit-Lite API — Human Test Suite\n\nUse this collection in either of two ways:\n\n## Run every automatable API as one workflow\n\n1. Start AuthKit-Lite with the `dev` profile and a MySQL database.\n2. Confirm `baseUrl` and the seeded admin credentials in the collection Variables tab.\n3. Select **01 — Guided Full API Test** and click **Run**.\n4. Keep the saved request order. The first request creates a fresh test identity and clears old runtime tokens.\n5. Review the test summary. The guided folder covers operations, registration, password login, JWT authorization, refresh rotation and replay rejection, logout, admin authorization, CSRF, CORS, and WebAuthn option endpoints.\n\n## Run one API at a time\n\nOpen any request and read its **Docs** description. Each request states its prerequisites, expected result, and variables it saves. For protected endpoints, run the relevant login request first or paste a token into the collection Variables tab.\n\n## Generated and saved values\n\nWith `autoGenerateUser=true`, the collection creates a unique `username` and `email`. Login, refresh, admin login, and CSRF requests automatically save their returned values. Runtime token variables intentionally start empty.\n\n## Browser-only passkey operations\n\nThe **02 — Browser Passkey Templates** folder contains every remaining WebAuthn endpoint. These templates are skipped unless `runBrowserRequests=true`, because Postman cannot call `navigator.credentials.create()` or `navigator.credentials.get()`. Paste authenticator output captured by a browser before sending them.\n\nThe collection uses safe local demo values only. Do not store production passwords, secrets, access tokens, or refresh tokens in a shared collection.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
@@ -1386,7 +1386,7 @@
                     "type": "text/javascript",
                     "exec": [
                       "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
-                      "pm.test(\"Origin returned\", () => pm.expect(pm.response.headers.get(\"Access-Control-Allow-Origin\")).to.eql(\"http://localhost:3000\"));"
+                      "pm.test(\"Origin returned\", () => pm.expect(pm.response.headers.get(\"Access-Control-Allow-Origin\")).to.eql(pm.variables.get(\"allowedOrigin\")));"
                     ]
                   }
                 }

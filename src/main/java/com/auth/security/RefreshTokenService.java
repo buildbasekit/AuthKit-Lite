@@ -63,14 +63,16 @@ public class RefreshTokenService {
 		return !token.getExpiryDate().isAfter(Instant.now());
 	}
 
-	public RefreshToken findByHashedToken(String rawToken) {
-		return refreshTokenRepository.findByTokenHash(hashToken(rawToken))
-				.orElseThrow(() -> new RefreshTokenException("Refresh token not found"));
+	private RefreshToken findByHashedTokenForUpdate(String rawToken) {
+		return refreshTokenRepository.findByTokenHashForUpdate(hashToken(rawToken))
+				.orElseThrow(() -> new RefreshTokenException("Refresh token was already used or revoked"));
 	}
 
 	@Transactional
 	public TokenResponse refreshAccessToken(String requestRefreshToken) {
-		RefreshToken token = findByHashedToken(requestRefreshToken);
+		// Serialize rotation for this token so concurrent replay attempts wait for
+		// the winner and then observe that the consumed row no longer exists.
+		RefreshToken token = findByHashedTokenForUpdate(requestRefreshToken);
 
 		if (isExpired(token)) {
 			refreshTokenRepository.delete(token);
@@ -83,12 +85,7 @@ public class RefreshTokenService {
 			throw new AccessDeniedBusinessException("User account is disabled");
 		}
 
-		// Rotation: Delete old token atomically
-		int deletedCount = refreshTokenRepository.deleteByTokenHash(token.getTokenHash());
-		if (deletedCount == 0) {
-			// Token was already deleted by another concurrent request
-			throw new RefreshTokenException("Refresh token was already used or revoked");
-		}
+		refreshTokenRepository.delete(token);
 		
 		String newRawRefreshToken = createRefreshToken(user);
 
@@ -106,11 +103,7 @@ public class RefreshTokenService {
 
 	@Transactional
 	public void logout(String requestRefreshToken) {
-		try {
-			RefreshToken token = findByHashedToken(requestRefreshToken);
-			refreshTokenRepository.deleteByTokenHash(token.getTokenHash());
-		} catch (RefreshTokenException ignored) {
-			// If it's already invalid or deleted, we don't care on logout.
-		}
+		// Logout is intentionally idempotent; deleting a missing hash is a no-op.
+		refreshTokenRepository.deleteByTokenHash(hashToken(requestRefreshToken));
 	}
 }

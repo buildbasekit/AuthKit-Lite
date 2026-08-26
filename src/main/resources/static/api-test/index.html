@@ -4,16 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="A dependency-free browser workspace for testing AuthKit-Lite APIs, JWT flows, authorization, and passkeys.">
-  <title>AuthKit-Lite API Test Console</title>
+  <meta name="description" content="BuildBaseKit's dependency-free browser workspace for testing AuthKit-Lite APIs, JWT flows, authorization, and passkeys.">
+  <title>BuildBaseKit · AuthKit-Lite API Test Console</title>
+  <link rel="icon" type="image/png" href="buildbasekit-logo.png">
   <link rel="stylesheet" href="styles.css">
   <script src="app.js" defer></script>
 </head>
 <body>
   <div id="file-launcher" class="launcher" hidden>
     <div class="launcher-card">
-      <span class="brand-mark large" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-      <p class="eyebrow">AuthKit-Lite / Browser workspace</p>
+      <img class="brand-logo large" src="buildbasekit-logo.png" alt="BuildBaseKit">
+      <p class="eyebrow">BuildBaseKit / AuthKit-Lite</p>
       <h1>Opening the API console<span class="accent-dot">.</span></h1>
       <p>Passkeys require an HTTP origin. Keep AuthKit-Lite running on port 8080 and this file will open its server-hosted copy.</p>
       <a class="button primary" href="http://localhost:8080/api-test/index.html">Open API console <span aria-hidden="true">→</span></a>
@@ -23,9 +24,9 @@
 
   <div id="app" class="app-shell">
     <header class="topbar">
-      <a class="brand" href="#workspace" aria-label="AuthKit-Lite API Console home">
-        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-        <span><strong>AuthKit</strong><em>/ API Console</em></span>
+      <a class="brand" href="#workspace" aria-label="BuildBaseKit AuthKit-Lite API Console home">
+        <img class="brand-logo" src="buildbasekit-logo.png" alt="">
+        <span><strong>BuildBaseKit</strong><em>/ AuthKit-Lite API Console</em></span>
       </a>
       <div class="topbar-meta">
         <span class="connection-status"><i aria-hidden="true"></i> Local workspace</span>
@@ -39,7 +40,7 @@
 
     <section class="hero" aria-labelledby="page-title">
       <div class="hero-copy-block">
-        <p class="eyebrow">Developer tools / Authentication</p>
+        <p class="eyebrow">BuildBaseKit / Developer tools</p>
         <h1 id="page-title">Test every auth path.<br><span>Trust every response.</span></h1>
         <p class="hero-copy">A focused browser workspace for validating JWT, role-based access, refresh rotation, and real passkey ceremonies against your running AuthKit-Lite API.</p>
       </div>
@@ -208,8 +209,8 @@
     </div>
 
     <footer class="page-footer">
-      <span>AuthKit-Lite / developer workspace</span>
-      <span>Zero build · Zero remote scripts · Tokens in memory only</span>
+      <span>BuildBaseKit / AuthKit-Lite developer workspace</span>
+      <span><a href="https://buildbasekit.com/boilerplates/authkit-lite/">buildbasekit.com</a> · Zero remote scripts · Tokens in memory only</span>
     </footer>
   </div>
 </body>

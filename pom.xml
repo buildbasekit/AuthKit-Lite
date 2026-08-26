@@ -11,20 +11,20 @@
 	<groupId>com.auth</groupId>
 	<artifactId>AuthKit</artifactId>
 	<version>1.0</version>
-	<name>AuthKit</name>
-	<description>A boilerplate for springboot authentication with jwt (roles, refresh tokens, DB)</description>
-	<url/>
+	<name>AuthKit-Lite</name>
+	<description>BuildBaseKit Spring Boot authentication boilerplate with JWT, refresh tokens, roles, and passkeys</description>
+	<url>https://buildbasekit.com/boilerplates/authkit-lite/</url>
 	<licenses>
-		<license/>
+		<license>
+			<name>MIT License</name>
+			<url>https://opensource.org/license/mit</url>
+		</license>
 	</licenses>
-	<developers>
-		<developer/>
-	</developers>
 	<scm>
-		<connection/>
-		<developerConnection/>
+		<connection>scm:git:https://github.com/buildbasekit/AuthKit-Lite.git</connection>
+		<developerConnection>scm:git:ssh://git@github.com/buildbasekit/AuthKit-Lite.git</developerConnection>
 		<tag/>
-		<url/>
+		<url>https://github.com/buildbasekit/AuthKit-Lite</url>
 	</scm>
 	<properties>
 		<java.version>26</java.version>

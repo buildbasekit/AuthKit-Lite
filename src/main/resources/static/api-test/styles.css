@@ -9,10 +9,10 @@
   --muted: #7e8985;
   --line: #242a28;
   --line-strong: #343c39;
-  --accent: #78d6c6;
-  --accent-strong: #9cebdd;
+  --accent: #20c7a6;
+  --accent-strong: #4bdfc0;
   --accent-ink: #07110f;
-  --accent-soft: rgba(120, 214, 198, 0.11);
+  --accent-soft: rgba(32, 199, 166, 0.12);
   --blue: #8cbcff;
   --blue-soft: rgba(84, 145, 230, 0.12);
   --amber: #e5b96b;
@@ -38,8 +38,8 @@
   --muted: #697670;
   --line: #dce3df;
   --line-strong: #c6d1cc;
-  --accent: #217b6d;
-  --accent-strong: #185e53;
+  --accent: #0f806a;
+  --accent-strong: #0a6755;
   --accent-ink: #ffffff;
   --accent-soft: rgba(33, 123, 109, 0.09);
   --blue: #2869a8;
@@ -99,20 +99,13 @@ button:focus-visible, a:focus-visible, input:focus-visible, summary:focus-visibl
 .brand strong { font-size: 0.92rem; letter-spacing: -0.02em; }
 .brand em { color: var(--muted); font: 500 0.72rem var(--font-code); font-style: normal; }
 
-.brand-mark {
-  display: grid;
+.brand-logo {
+  display: block;
   width: 27px;
   height: 27px;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 3px;
-  padding: 4px;
-  border: 1px solid var(--line-strong);
-  border-radius: 8px;
-  transform: rotate(45deg);
+  object-fit: contain;
 }
-.brand-mark i { display: block; border-radius: 2px; background: var(--accent); }
-.brand-mark i:nth-child(2), .brand-mark i:nth-child(3) { opacity: 0.4; }
-.brand-mark.large { width: 40px; height: 40px; margin: 0 auto 24px; padding: 6px; border-radius: 11px; }
+.brand-logo.large { width: 64px; height: 64px; margin: 0 auto 24px; }
 
 .topbar-meta { display: flex; align-items: center; gap: 10px; }
 .connection-status, .version-tag, .live-label, .endpoint-count, .response-hint {
@@ -340,6 +333,8 @@ input::placeholder { color: color-mix(in srgb, var(--muted) 70%, transparent); }
 .result-body[hidden] { display: none; }
 
 .page-footer { display: flex; width: min(1760px, calc(100% - 48px)); justify-content: space-between; gap: 20px; margin: 0 auto; padding: 34px 0 44px; color: var(--muted); font: 500 0.63rem var(--font-code); }
+.page-footer a { color: var(--text-soft); text-decoration: none; }
+.page-footer a:hover { color: var(--accent); }
 .launcher { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 24px; background: var(--bg); }
 .launcher[hidden] { display: none; }
 .launcher-card { width: min(590px, 100%); border: 1px solid var(--line); border-radius: 18px; background: var(--surface); box-shadow: var(--shadow); padding: 44px; text-align: center; }

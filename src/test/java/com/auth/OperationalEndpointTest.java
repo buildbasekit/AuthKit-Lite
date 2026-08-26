@@ -46,7 +46,13 @@ class OperationalEndpointTest {
 		mockMvc.perform(get("/api-test/index.html"))
 				.andExpect(status().isOk())
 				.andExpect(content().contentTypeCompatibleWith("text/html"))
-				.andExpect(content().string(org.hamcrest.Matchers.containsString("AuthKit-Lite API Test Console")));
+				.andExpect(content().string(org.hamcrest.Matchers.containsString("BuildBaseKit")))
+				.andExpect(content().string(org.hamcrest.Matchers.containsString("AuthKit-Lite API Test Console")))
+				.andExpect(content().string(org.hamcrest.Matchers.containsString("buildbasekit-logo.png")));
+
+		mockMvc.perform(get("/api-test/buildbasekit-logo.png"))
+				.andExpect(status().isOk())
+				.andExpect(content().contentTypeCompatibleWith("image/png"));
 
 		mockMvc.perform(get("/api-test/app.js"))
 				.andExpect(status().isOk())

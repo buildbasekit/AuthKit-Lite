@@ -20,10 +20,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -345,34 +346,35 @@ public class AuthControllerTest {
 		CountDownLatch latch = new CountDownLatch(1);
 		CountDownLatch doneLatch = new CountDownLatch(threads);
 		
-		AtomicInteger successCount = new AtomicInteger(0);
-		AtomicInteger forbiddenCount = new AtomicInteger(0);
+		ConcurrentLinkedQueue<Integer> statuses = new ConcurrentLinkedQueue<>();
+		ConcurrentLinkedQueue<Throwable> failures = new ConcurrentLinkedQueue<>();
 
-		for (int i = 0; i < threads; i++) {
-			executor.submit(() -> {
-				try {
-					latch.await();
-					int status = mockMvc.perform(post("/api/auth/refresh")
-							.contentType(MediaType.APPLICATION_JSON)
-							.content(requestContent))
-							.andReturn().getResponse().getStatus();
-					if (status == 200) {
-						successCount.incrementAndGet();
-					} else if (status == 401) {
-						forbiddenCount.incrementAndGet();
+		try {
+			for (int i = 0; i < threads; i++) {
+				executor.submit(() -> {
+					try {
+						latch.await();
+						statuses.add(mockMvc.perform(post("/api/auth/refresh")
+								.contentType(MediaType.APPLICATION_JSON)
+								.content(requestContent))
+								.andReturn().getResponse().getStatus());
+					} catch (Throwable failure) {
+						failures.add(failure);
+					} finally {
+						doneLatch.countDown();
 					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				} finally {
-					doneLatch.countDown();
-				}
-			});
+				});
+			}
+
+			latch.countDown();
+			assertThat(doneLatch.await(15, TimeUnit.SECONDS)).isTrue();
+		} finally {
+			executor.shutdownNow();
 		}
 
-		latch.countDown(); // Start all threads at once
-		doneLatch.await();
-
-		assertThat(successCount.get()).isEqualTo(1);
-		assertThat(forbiddenCount.get()).isEqualTo(threads - 1);
+		assertThat(failures).isEmpty();
+		assertThat(statuses).hasSize(threads);
+		assertThat(statuses.stream().filter(code -> code == 200)).hasSize(1);
+		assertThat(statuses.stream().filter(code -> code == 401)).hasSize(threads - 1);
 	}
 }

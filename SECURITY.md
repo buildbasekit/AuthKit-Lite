@@ -19,7 +19,7 @@ This document outlines the security architecture and guarantees of AuthKit-Lite.
 - **Refresh Token Hashing**: Refresh tokens are opaque cryptographically secure random bytes sent to the client as URL-safe Base64 strings. We **do not store the raw token in the database**. Instead, we store a **SHA-256 hash** of the token. This prevents an attacker who compromises the database from hijacking active sessions.
 - **One Active Session**: AuthKit-Lite maintains one active refresh session per user. A new login replaces the user's previous refresh token.
 - **Token Rotation**: Every time a refresh token is used to obtain a new access token, it is immediately revoked and a new refresh token is issued. 
-- **Concurrency Protection**: Rotation uses an atomic delete operation. If two concurrent requests attempt to refresh using the same token, only one will succeed, mitigating race-condition replay attacks.
+- **Concurrency Protection**: Rotation takes a pessimistic write lock on the matching refresh-token row before consuming it. If concurrent requests present the same token, only one succeeds; waiting replays receive `401 Unauthorized` after the winner commits.
 - **Disabled Users**: Refresh token requests check if the associated user account is still enabled (`user.isEnabled()`). If disabled, the request is rejected and the token is revoked.
 - **Logout Revocation**: Logout atomically deletes the hashed refresh token from the database, permanently ending the session.
 
@@ -32,12 +32,12 @@ This document outlines the security architecture and guarantees of AuthKit-Lite.
 
 ## Browser API Test Console
 
-- All API testing frontend files are isolated in `src/main/resources/static/api-test/`. When adopting AuthKit-Lite for another project, delete that entire directory before deployment so the developer console cannot be exposed or misused. Remove or update its static-resource assertions in `OperationalEndpointTest` as part of the same cleanup.
-- `/api-test/**` contains public static development assets only. It does not make any protected API or WebAuthn operation public; the normal JWT, role, CSRF, session, RP ID, origin, and credential-ownership checks still apply.
+- All API testing frontend files are isolated in `src/main/resources/static/api-test/`. The fallback security chain denies `/api-test/**` by default; `application-dev.properties` enables it for the `dev` profile. Never run the `dev` profile or enable `AUTHKIT_TEST_CONSOLE_ENABLED` in production.
+- `/api-test/**` contains static development assets only. Enabling the console does not make any protected API or WebAuthn operation public; the normal JWT, role, CSRF, session, RP ID, origin, and credential-ownership checks still apply.
 - The console stores access and refresh tokens only in JavaScript memory. It does not write them to local storage, session storage, cookies, URLs, or logs, and response rendering redacts token values.
 - The console loads no remote JavaScript and sends requests only to the base URL selected by the user. Use it with local/demo accounts, not production credentials.
 - WebAuthn runs from the application-hosted `http://localhost:8080` origin. The local `file://` copy redirects there because opaque file origins are not valid relying-party origins.
-- Deleting the self-contained `api-test` directory is the recommended production cleanup; separately restrict `/api-test/**` if the console must remain available in a controlled environment.
+- The console may remain packaged because production access is denied by default. If it is enabled in a controlled environment, continue to use only non-production test credentials.
 
 ## Rate Limiting & Brute Force Protection (Deployment Responsibility)
 AuthKit-Lite focuses purely on standard token-based authentication. **It does not implement application-level distributed rate limiting.**
