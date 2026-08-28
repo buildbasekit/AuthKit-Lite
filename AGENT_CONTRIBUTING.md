@@ -22,9 +22,9 @@ Do not save this content as `CONTRIBUTING.md`, because that file already exists 
 
 Before running the project locally, install:
 
-- Java 26
+- Java 25 LTS
 - Maven 3.9+
-- MySQL 8+ or a compatible MySQL database
+- MySQL 8+ only when testing an external MySQL configuration
 - Docker Desktop or another Testcontainers-compatible Docker engine for tests
 - Git
 - An IDE such as IntelliJ IDEA, Eclipse, or VS Code
@@ -40,17 +40,17 @@ git clone https://github.com/buildbasekit/AuthKit-Lite.git
 cd AuthKit-Lite
 ```
 
-### 2.2 Create a local database
+### 2.2 Run with the default database
 
-Create a MySQL database for local development. Example:
+The default configuration uses an in-memory H2 database, so no database setup is needed:
 
-```sql
-CREATE DATABASE authkit_lite;
+```bash
+./mvnw spring-boot:run
 ```
 
-### 2.3 Configure application properties
+### 2.3 Configure an external database
 
-Provide local database values and a long random JWT secret through Spring Boot's externalized configuration.
+To use MySQL, provide database values and a long random JWT secret through Spring Boot's externalized configuration. Disable dummy data outside local demo environments.
 
 Example shape:
 
@@ -59,11 +59,12 @@ export DB_URL=jdbc:mysql://localhost:3306/authkit_lite
 export DB_USERNAME=your_local_username
 export DB_PASSWORD=your_local_password
 export JWT_SECRET=replace-with-a-long-random-local-development-secret
+export AUTHKIT_DEMO_DATA_ENABLED=false
 ```
 
 Do not commit real credentials or production secrets.
 
-### 2.4 Run the app
+### 2.4 Run the app with external configuration
 
 ```bash
 ./mvnw spring-boot:run
@@ -111,7 +112,7 @@ Keep commits focused. Do not mix unrelated formatting, refactoring, and feature 
 
 ### Java and Spring
 
-- Use Java 26 features only when they improve clarity, and avoid preview features in the reusable baseline.
+- Use Java 25 features only when they improve clarity, and avoid preview features in the reusable baseline.
 - Follow Spring Boot 4.1 conventions.
 - Prefer constructor injection.
 - Keep controllers thin.

@@ -1,141 +1,145 @@
 # AuthKit-Lite by BuildBaseKit
 
-AuthKit-Lite is a lean, secure, and modern Spring Boot authentication boilerplate from [BuildBaseKit](https://buildbasekit.com/boilerplates/authkit-lite/). It provides a robust starting point for REST APIs requiring JWT-based authentication, role-based authorization, and secure session management via refresh tokens.
+AuthKit-Lite is a compact Spring Boot authentication boilerplate for REST APIs. It combines stateless JWT access tokens, rotating refresh tokens, role-based authorization, and optional passkeys without adding a separate frontend or custom JWT filter.
 
-## Tech Stack
-- **Spring Boot 4.1.1**
-- **Java 26**
-- **Spring Security** (OAuth2 Resource Server)
-- **Spring Data JPA** / **Hibernate**
-- **MySQL** 
-- **Flyway** (Database migrations)
-- **Testcontainers** (Isolated integration testing)
+## Technology
+
+- Spring Boot 4.1.1 and Java 25 LTS
+- Spring Security with OAuth2 Resource Server and native WebAuthn support
+- Spring Data JPA, Hibernate, H2/MySQL, and Flyway
+- BCrypt password hashing
+- Testcontainers with MySQL 8.4 for integration tests
 
 ## Core Features
-- 🚀 **Stateless JWT Access Tokens**: Generated securely using Spring Security's native `JwtEncoder` and verified via `JwtDecoder` (HS256).
-- 🔄 **Secure Refresh Token Rotation**: Refresh tokens are hashed via SHA-256 before storage. Concurrent refresh attempts are atomically protected. AuthKit-Lite maintains one active refresh session per user. A new login replaces the user's previous refresh token.
-- 🔐 **Role-Based Authorization**: Endpoints are secured natively using Spring Security's `@PreAuthorize` (e.g., `ROLE_USER`, `ROLE_ADMIN`).
-- 🔑 **Passkeys / WebAuthn**: Built-in support for biometric authentication, security keys, and device PINs leveraging Spring Security 7 WebAuthn integration.
-- 🛑 **Configuration Validation**: Fails fast on startup if JWT or WebAuthn properties are misconfigured.
-- 🐳 **Testcontainers Isolation**: A fully decoupled integration test suite that spins up an ephemeral MySQL container, keeping your local dev DB clean.
 
----
+- HS256 JWT access tokens validated for signature, expiry, issuer, and audience
+- Opaque refresh tokens stored only as SHA-256 hashes and rotated atomically
+- One active refresh-token session per user, including concurrent replay protection
+- `ROLE_USER` and `ROLE_ADMIN` authorization
+- Optional WebAuthn/passkey registration, authentication, listing, and deletion
+- Graceful shutdown, health/info actuator endpoints, and configuration validation
+- Configurable demo users and a dependency-free browser API console
+
+## Requirements
+
+- Java 25 LTS
+- MySQL 8.0 or later only when using an external MySQL database
+- Docker or another Testcontainers-compatible container runtime for tests
+- Git
+
+The Maven wrapper is included, so a system Maven installation is not required.
 
 ## Getting Started
 
-### 1. Prerequisites
-- Java 26
-- MySQL 8.0+ (For running locally)
-- Docker (Required for running tests via Testcontainers)
+1. Clone the repository and enter its directory.
+2. Run `./mvnw spring-boot:run`.
 
-### 2. Configuration
-Create a database in your MySQL instance (e.g., `authkit_db`). The application uses environment variables for secure configuration. You can export these or configure them in your IDE:
+The default configuration uses an in-memory H2 database, applies the Flyway migrations, and creates the demo users below when the database has no users. No database setup is required.
 
-```bash
-export DB_URL=jdbc:mysql://localhost:3306/authkit_db
-export DB_USERNAME=root
-export DB_PASSWORD=your_password
-export JWT_SECRET=super-secure-secret-that-is-at-least-32-chars-long
-export JWT_ISSUER=authkit
-export JWT_AUDIENCE=authkit-api
-export PASSKEY_ENABLED=true
-export PASSKEY_RP_NAME="BuildBaseKit AuthKit-Lite"
-export PASSKEY_RP_ID=localhost
-export PASSKEY_ALLOWED_ORIGINS=http://localhost:8080,http://localhost:3000
-```
+- Administrator: `admin` / `password123123`
+- User: `user` / `password123123`
 
-### 3. Run the Application
-The repository includes a Maven Wrapper, meaning you do not need Maven installed globally.
+## Environment Configuration
+
+All runnable defaults are in `src/main/resources/application.properties`. To override them, copy [.env.example](.env.example) to `.env`, uncomment only the settings you need, and restart the application. The root `.env` file is loaded automatically and is ignored by Git.
+
+Database variables are optional: setting `DB_URL`, `DB_USERNAME`, and `DB_PASSWORD` switches the application to the configured database. Set `AUTHKIT_DEMO_DATA_ENABLED=false` to disable dummy users. When dummy data is enabled, it is inserted only if the connected database's `users` table is empty.
+
+For zero-configuration local runs, the application generates an ephemeral JWT secret at startup. Production deployments must provide a stable, high-entropy `JWT_SECRET` of at least 32 characters, use an external database, and disable demo data. For production passkeys, use an HTTPS origin and configure the relying-party ID and allowed origins to match the deployed hostname. Never commit `.env` or production credentials.
+
+## Running Locally
+
+Run the default configuration:
 
 ```bash
-# Run locally (default profile)
 ./mvnw spring-boot:run
-
-# Run with demo users, passkeys, and the browser API console enabled
-./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
-When running, Flyway applies `V1__init_schema.sql` followed by the Spring Security WebAuthn JDBC schema in `V2__add_webauthn.sql`. Hibernate then validates the JPA-managed tables.
+Flyway creates and migrates the in-memory H2 schema; Hibernate validates it and never owns schema changes. To use MySQL instead, provide the database environment variables shown in [.env.example](.env.example).
 
-### 4. Testing
-Tests rely on Docker and Testcontainers to guarantee isolation.
+## Testing
+
+The integration suite starts an isolated MySQL 8.4 container and does not use the local development database.
 
 ```bash
-# Run tests
-./mvnw clean test
-
-# Package the application
 ./mvnw clean verify
 ```
 
----
+Tests cover registration, password login, JWT validation, refresh-token rotation and replay, concurrent refresh handling, logout, disabled users, RBAC, CORS, CSRF, actuator security, WebAuthn option/failure paths, and default development-tool isolation. A real browser/platform authenticator is still required to complete successful WebAuthn ceremonies.
 
-## API Endpoints
+## API Overview
 
 ### Authentication
-- `POST /api/auth/register`: Register a new user. Minimum password length is 12 characters.
-- `POST /api/auth/login`: Authenticate and receive `accessToken` and `refreshToken`.
-- `POST /api/auth/refresh`: Rotate refresh token and issue a new access token.
-- `POST /api/auth/logout`: Revoke the refresh token. Requires the current Bearer access token.
 
-### WebAuthn / Passkeys
-- `GET /webauthn/csrf`: Obtain the `XSRF-TOKEN` cookie and the matching `X-XSRF-TOKEN` header value.
-- `POST /webauthn/register/options`: Initiate passkey registration. Requires Bearer authentication, the CSRF cookie/header, and the same temporary session.
-- `POST /webauthn/register`: Complete passkey registration. Requires Bearer authentication, the CSRF cookie/header, the temporary session, and browser-generated WebAuthn data.
-- `DELETE /webauthn/register/{credentialId}`: Delete the authenticated user's credential through Spring Security's ownership-checked endpoint. Requires Bearer authentication and CSRF/session state.
-- `POST /webauthn/authenticate/options`: Initiate passkey authentication. Public, but requires the CSRF cookie/header and temporary session.
-- `POST /login/webauthn`: Complete passkey authentication. On success, returns AuthKit access and refresh tokens. Requires the CSRF cookie/header, temporary session, and browser-generated WebAuthn data.
+- `POST /api/auth/register` — register a user; passwords require at least 12 characters.
+- `POST /api/auth/login` — receive an access token and refresh token.
+- `POST /api/auth/refresh` — rotate a refresh token and receive a new token pair.
+- `POST /api/auth/logout` — invalidate the supplied refresh-token session; requires Bearer authentication.
 
-### Users (Protected)
-- `GET /api/users/me`: Fetch profile of the currently authenticated user.
-- `GET /api/users/me/passkeys`: List all registered passkeys for the user.
-- `GET /api/users`: Fetch a paginated list of all users (Requires `ROLE_ADMIN`).
+### Users
+
+- `GET /api/users/me` — current authenticated user profile.
+- `GET /api/users/me/passkeys` — current user's passkey metadata.
+- `GET /api/users` — paginated user list for `ROLE_ADMIN`.
+
+### Passkeys / WebAuthn
+
+- `GET /webauthn/csrf` — obtain the CSRF cookie and token for a ceremony session.
+- `POST /webauthn/register/options` — authenticated registration options.
+- `POST /webauthn/register` — complete authenticated registration with browser data.
+- `DELETE /webauthn/register/{credentialId}` — delete an owned credential.
+- `POST /webauthn/authenticate/options` — public authentication options.
+- `POST /login/webauthn` — complete browser authentication and receive AuthKit tokens.
+
+WebAuthn operations retain temporary HTTP-session ceremony state and cookie CSRF protection. The `/api/**` chain remains stateless and uses Bearer tokens, so CSRF is disabled only for that chain.
 
 ### Operations
-- `GET /actuator`: Public discovery links for the exposed actuator endpoints.
-- `GET /actuator/health`: Public health status.
-- `GET /actuator/info`: Public application information.
-- `GET /api-test/index.html`: Dependency-free browser API test console (available only when `authkit.test-console.enabled=true`; the `dev` profile enables it).
 
-The `/api/**` chain is stateless and uses Bearer tokens, so CSRF is disabled only for that chain. WebAuthn endpoints retain Spring Security's session-backed ceremony state and cookie CSRF protection. CORS credentials are accepted only from the origins configured by `authkit.passkey.allowed-origins`.
+- `GET /actuator`, `GET /actuator/health`, and `GET /actuator/info` are public.
+- Other unmatched routes are denied.
 
----
+The root-level [AuthKit-Lite-API.postman_collection.json](AuthKit-Lite-API.postman_collection.json) provides a guided API workflow. Run it sequentially against a fresh application. WebAuthn registration/assertion completion and credential deletion are marked as manual browser-authenticator operations rather than simulated successes.
 
-## Postman Collection
-An up-to-date Postman collection (`Auth-Kit API Collection.postman_collection.json`) is included in the root directory.
-It creates a unique test user, chains access/refresh tokens, exercises CSRF and CORS, and contains assertions for every Postman-compatible endpoint. Run it sequentially against a fresh application started with the `dev` profile. Successful passkey enrollment/assertion and credential deletion remain browser-authenticator checks and are explicitly documented as excluded in the collection.
+## Security Behavior
 
-## Browser API Test Console
+Passwords are BCrypt-hashed. Access tokens are short-lived, stateless JWTs; refresh tokens are opaque, hashed at rest, single-session, and rotated under a database lock. Refresh replay, expired tokens, and refresh attempts for disabled users are rejected.
 
-The project includes a BuildBaseKit-branded, zero-build static test client at `src/main/resources/static/api-test/index.html`. It can exercise every endpoint individually, run a combined JWT workflow, or run the complete workflow with a real browser passkey. Every frontend asset for this developer tool is intentionally contained in `src/main/resources/static/api-test/`; it has no package-manager, build-step, or remote runtime dependency.
+Logout invalidates the refresh-token session and prevents additional access tokens from being issued from that session. Any already-issued access token remains valid until its configured expiration time; AuthKit-Lite does not maintain an access-token denylist.
 
-The console is denied by default and enabled by `application-dev.properties`. Never activate the `dev` profile in production. A controlled non-dev environment can opt in with `AUTHKIT_TEST_CONSOLE_ENABLED=true`, but this should remain exceptional.
+CORS accepts credentials only from configured origins. Production deployments must also provide HTTPS, secret management, and edge rate limiting/brute-force protection. See [SECURITY.md](SECURITY.md) for the precise security model.
 
-1. Start the application with the development profile so the administrator checks can use the seeded account:
+## Optional Local Features
 
-   ```bash
-   ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
-   ```
+The API test frontend is always public at [http://localhost:8080/api-test](http://localhost:8080/api-test); no login or configuration flag is required to open it. The frontend does not bypass authentication for protected API operations.
 
-2. Double-click `src/main/resources/static/api-test/index.html`.
-3. The local file automatically opens `http://localhost:8080/api-test/index.html`, because WebAuthn cannot operate from a `file://` origin.
-4. In a current WebAuthn-capable browser, choose **Run complete browser journey** to test all API groups, including passkey creation, passkey login, and passkey deletion. Approve the authenticator prompts shown by the browser.
-5. To test one endpoint, use its button in the relevant section. The state chips show which JWT, refresh token, CSRF session, and passkey prerequisites are ready.
+To enable passkeys locally, add this override to `.env`:
 
-The page has no package-manager or build step and loads no third-party scripts. Access and refresh tokens are kept only in page memory and are cleared when the tab closes or **New test identity** is selected. The default WebAuthn configuration expects the hostname `localhost`; do not replace it with `127.0.0.1` unless the RP ID and allowed origins are deliberately reconfigured.
+```properties
+PASSKEY_ENABLED=true
+```
 
-## Production Considerations
-Before deploying to production:
-1. Ensure the `dev` profile is disabled to prevent seeding demo credentials.
-2. Provide a highly entropic, securely managed `JWT_SECRET`.
-3. Implement **rate limiting** at your API Gateway or reverse proxy, as this application focuses purely on authentication logic and does not implement application-level throttling.
-4. Host over HTTPS/TLS to protect bearer tokens in transit.
-5. Keep `AUTHKIT_TEST_CONSOLE_ENABLED=false` (the default) and never activate the `dev` profile.
-6. Configure `PASSKEY_ENABLED=true`, `PASSKEY_RP_ID`, and `PASSKEY_ALLOWED_ORIGINS` only when the production HTTPS origin is ready. Passkeys are disabled by default outside development.
-7. The application uses graceful shutdown with a configurable `SHUTDOWN_TIMEOUT` (default `30s`); configure the deployment platform's termination grace period accordingly.
+Never leave demo seeding enabled in production.
 
-## Documentation Reference
-- [Architecture Details](ARCHITECTURE.md)
-- [Security Guarantees](SECURITY.md)
-- [Spring Boot 4.1.1 system requirements](https://docs.spring.io/spring-boot/system-requirements.html)
-- [Spring Security passkey reference](https://docs.spring.io/spring-security/reference/servlet/authentication/passkeys.html)
+## Project Structure
+
+```text
+src/main/java/com/auth/
+├── config/       # security and validated configuration
+├── controllers/  # HTTP endpoints
+├── dtos/         # request and response contracts
+├── entities/     # JPA entities
+├── exceptions/   # centralized API error handling
+├── repositories/ # persistence interfaces
+├── security/     # authentication and token lifecycle
+└── services/     # user-facing business operations
+
+src/main/resources/
+├── db/migration/ # Flyway schema migrations
+└── static/api-test/ # public browser API test frontend
+```
+
+Architecture details are in [ARCHITECTURE.md](ARCHITECTURE.md), human contribution guidance is in [CONTRIBUTING.md](CONTRIBUTING.md), and AI-agent constraints are in [AGENTS.md](AGENTS.md).
+
+## License
+
+AuthKit-Lite is available under the [MIT License](LICENSE).

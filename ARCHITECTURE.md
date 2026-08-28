@@ -1,6 +1,6 @@
 # AuthKit-Lite Architecture
 
-This document describes the AuthKit-Lite architecture based on Spring Boot 4.1.1 and Java 26.
+This document describes the AuthKit-Lite architecture based on Spring Boot 4.1.1 and Java 25 LTS.
 
 ## Core Design Philosophy
 
@@ -58,7 +58,7 @@ To support modern passwordless authentication, AuthKit-Lite integrates Spring Se
 1. **Ordered Filter Chain Design**:
    - Order 1, `/webauthn/**` and `/login/webauthn`: Uses Spring Security WebAuthn, accepts JWT authentication for registration/credential management, keeps temporary ceremony state in the HTTP session, and uses `CookieCsrfTokenRepository`. Only CSRF retrieval, authentication options, and assertion submission are public.
    - Order 2, `/api/**`: Strictly stateless, authenticates standard JWT Bearer tokens, and disables CSRF because it does not use browser cookies for authentication.
-   - Order 3, fallback: Permits the static `/api-test/**` browser test assets only when `authkit.test-console.enabled=true`, permits actuator discovery links plus the exposed `health` and `info` endpoints, and denies every other unmatched request. The console is disabled by default and enabled by the `dev` profile.
+   - Order 3, fallback: Publicly permits the `/api-test` frontend and its static `/api-test/**` assets, permits actuator discovery links plus the exposed `health` and `info` endpoints, and denies every other unmatched request.
 2. **Credential Persistence**:
    - We use Spring Security's native `JdbcUserCredentialRepository` and `JdbcPublicKeyCredentialUserEntityRepository`.
    - The database contains `user_credentials` and `user_entities`, using the exact column contract expected by Spring Security 7.1's JDBC repositories.
@@ -69,9 +69,11 @@ To support modern passwordless authentication, AuthKit-Lite integrates Spring Se
 
 ## 5. Database Schema & Migrations
 
+- **Default database**: An in-memory H2 database in MySQL compatibility mode makes local startup dependency-free. External MySQL remains available through `DB_URL`, `DB_USERNAME`, and `DB_PASSWORD`.
 - **Flyway**: `V1__init_schema.sql` creates application tables and baseline roles; `V2__add_webauthn.sql` adds Spring Security's JDBC WebAuthn tables. Flyway is the only schema owner.
 - **Hibernate**: Configured to `validate` mode. It ensures the entity mappings perfectly match the Flyway schema.
 - **Constraints**: Enforced rigidly (e.g., unique constraints on emails, usernames, and user-refresh-token relations).
+- **Demo data**: When `authkit.demo-data.enabled=true`, startup creates the demo administrator and user only when the connected database contains no users.
 
 ---
 
@@ -79,4 +81,4 @@ To support modern passwordless authentication, AuthKit-Lite integrates Spring Se
 
 - **Testcontainers**: Tests use an isolated MySQL 8.4 container managed by Spring Boot 4.1.1's `@ServiceConnection` and Testcontainers 2 integration. This guarantees tests never pollute or depend on the developer's local database.
 - **MockMvc**: End-to-end integration tests use `MockMvc` to rigorously test API boundaries, assertions, validation, and JSON structures.
-- **Browser API Test Console**: BuildBaseKit-branded static HTML, CSS, JavaScript, and logo assets under `src/main/resources/static/api-test/` provide a same-origin manual client without adding a frontend runtime or dependency. A locally double-clicked `index.html` acts only as a launcher and redirects to the server-hosted `localhost` copy so WebAuthn has a valid RP origin. The client preserves WebAuthn ceremony state through the browser session cookie, sends the cookie-backed CSRF token, delegates credential creation/assertion to `navigator.credentials`, and keeps JWT/refresh tokens only in memory. Security configuration denies the assets unless the console is explicitly enabled.
+- **Browser API Test Frontend**: BuildBaseKit-branded static HTML, CSS, JavaScript, and logo assets under `src/main/resources/static/api-test/` provide a public same-origin manual client at `/api-test` without adding a frontend runtime or dependency. A locally double-clicked `index.html` acts only as a launcher and redirects to the server-hosted `localhost` copy so WebAuthn has a valid RP origin. The client preserves WebAuthn ceremony state through the browser session cookie, sends the cookie-backed CSRF token, delegates credential creation/assertion to `navigator.credentials`, and keeps JWT/refresh tokens only in memory. Protected APIs retain their normal security rules.

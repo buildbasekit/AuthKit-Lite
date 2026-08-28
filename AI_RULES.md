@@ -225,7 +225,7 @@ Preferred patterns:
 - Add service methods instead of putting logic in controllers.
 - Add tests around security behavior.
 - Introduce profiles for development and production configuration.
-- Move demo seed data behind a development profile.
+- Keep demo seed data behind an explicit configuration property.
 - Replace `ddl-auto=update` with migrations when productionizing. Flyway owns schema changes. Hibernate validates the schema.
 
 ---

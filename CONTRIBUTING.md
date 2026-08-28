@@ -1,4 +1,4 @@
-# 🤝 Contributing to Auth Kit (BuildBaseKit)
+# 🤝 Contributing to AuthKit-Lite (BuildBaseKit)
 
 Thanks for your interest in contributing!
 

@@ -35,8 +35,8 @@ public class WebAuthnAuthenticationSuccessHandler implements AuthenticationSucce
             return;
         }
 
-        // WebAuthn principal is typically a PublicKeyCredentialUserEntity or similar string/bytes
-        // In our JpaPublicKeyCredentialUserEntityRepository, we set name to username.
+        // Spring Security's JDBC WebAuthn repositories expose the application username
+        // as the authenticated principal name.
         String username = webAuthnAuth.getName();
         
         User user = userRepository.findByUsername(username)

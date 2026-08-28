@@ -9,8 +9,8 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.auth</groupId>
-	<artifactId>AuthKit</artifactId>
-	<version>1.0</version>
+	<artifactId>authkit-lite</artifactId>
+	<version>1.0.0</version>
 	<name>AuthKit-Lite</name>
 	<description>BuildBaseKit Spring Boot authentication boilerplate with JWT, refresh tokens, roles, and passkeys</description>
 	<url>https://buildbasekit.com/boilerplates/authkit-lite/</url>
@@ -27,7 +27,7 @@
 		<url>https://github.com/buildbasekit/AuthKit-Lite</url>
 	</scm>
 	<properties>
-		<java.version>26</java.version>
+		<java.version>25</java.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -40,12 +40,17 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
+			<artifactId>spring-boot-starter-webmvc</artifactId>
 		</dependency>
 
 		<dependency>
 			<groupId>com.mysql</groupId>
 			<artifactId>mysql-connector-j</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
@@ -55,7 +60,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+			<artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.security</groupId>

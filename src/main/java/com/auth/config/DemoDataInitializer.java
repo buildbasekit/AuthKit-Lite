@@ -3,7 +3,7 @@ package com.auth.config;
 import java.util.Set;
 
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Profile;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,7 +14,7 @@ import com.auth.repositories.RoleRepository;
 import com.auth.repositories.UserRepository;
 
 @Component
-@Profile("dev")
+@ConditionalOnProperty(prefix = "authkit.demo-data", name = "enabled", havingValue = "true")
 public class DemoDataInitializer implements CommandLineRunner {
 
 	private final RoleRepository roleRepository;
@@ -31,26 +31,24 @@ public class DemoDataInitializer implements CommandLineRunner {
 	@Override
 	@Transactional
 	public void run(String... args) {
-		// Create dummy admin user if not exists
-		if (userRepository.findByUsername("admin").isEmpty()) {
-			Role adminRole = roleRepository.findByName("ROLE_ADMIN").orElseThrow();
-			User admin = new User();
-			admin.setUsername("admin");
-			admin.setEmail("admin@example.com");
-			admin.setPassword(passwordEncoder.encode("password123123"));
-			admin.setRoles(Set.of(adminRole));
-			userRepository.save(admin);
+		if (userRepository.count() > 0) {
+			return;
 		}
 
-		// Create dummy normal user if not exists
-		if (userRepository.findByUsername("user").isEmpty()) {
-			Role userRole = roleRepository.findByName("ROLE_USER").orElseThrow();
-			User user = new User();
-			user.setUsername("user");
-			user.setEmail("user@example.com");
-			user.setPassword(passwordEncoder.encode("password123123"));
-			user.setRoles(Set.of(userRole));
-			userRepository.save(user);
-		}
+		Role adminRole = roleRepository.findByName("ROLE_ADMIN").orElseThrow();
+		User admin = new User();
+		admin.setUsername("admin");
+		admin.setEmail("admin@example.com");
+		admin.setPassword(passwordEncoder.encode("password123123"));
+		admin.setRoles(Set.of(adminRole));
+		userRepository.save(admin);
+
+		Role userRole = roleRepository.findByName("ROLE_USER").orElseThrow();
+		User user = new User();
+		user.setUsername("user");
+		user.setEmail("user@example.com");
+		user.setPassword(passwordEncoder.encode("password123123"));
+		user.setRoles(Set.of(userRole));
+		userRepository.save(user);
 	}
 }

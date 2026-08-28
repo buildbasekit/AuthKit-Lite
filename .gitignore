@@ -84,6 +84,7 @@ logs/
 
 .env
 .env.*
+!.env.example
 application-local.properties
 application-dev.properties
 application-prod.properties

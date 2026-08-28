@@ -51,14 +51,11 @@ public class SecurityConfig {
 
 	private final JwtProperties jwtProperties;
 	private final PasskeyProperties passkeyProperties;
-	private final TestConsoleProperties testConsoleProperties;
 	private final UserDetailsService userDetailsService;
 	public SecurityConfig(JwtProperties jwtProperties, PasskeyProperties passkeyProperties,
-						  TestConsoleProperties testConsoleProperties,
 						  UserDetailsService userDetailsService) {
 		this.jwtProperties = jwtProperties;
 		this.passkeyProperties = passkeyProperties;
-		this.testConsoleProperties = testConsoleProperties;
 		this.userDetailsService = userDetailsService;
 	}
 
@@ -140,14 +137,11 @@ public class SecurityConfig {
 	@Bean
 	@Order(3)
 	public SecurityFilterChain fallbackFilterChain(HttpSecurity http) throws Exception {
-		http.authorizeHttpRequests(auth -> {
-			if (testConsoleProperties.enabled()) {
-				auth.requestMatchers(HttpMethod.GET, "/api-test/**").permitAll();
-			}
-			auth.requestMatchers(EndpointRequest.toLinks()).permitAll()
+		http.authorizeHttpRequests(auth -> auth
+					.requestMatchers("/api-test", "/api-test/", "/api-test/**").permitAll()
+					.requestMatchers(EndpointRequest.toLinks()).permitAll()
 					.requestMatchers(EndpointRequest.to("health", "info")).permitAll()
-					.anyRequest().denyAll();
-		});
+					.anyRequest().denyAll());
 		return http.build();
 	}
 

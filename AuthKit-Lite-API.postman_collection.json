@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "4b8284db-9b5e-4c4b-a4f3-authkitlite41",
     "name": "BuildBaseKit AuthKit-Lite API — Human Test Suite",
-    "description": "# AuthKit-Lite API — Human Test Suite\n\nUse this collection in either of two ways:\n\n## Run every automatable API as one workflow\n\n1. Start AuthKit-Lite with the `dev` profile and a MySQL database.\n2. Confirm `baseUrl` and the seeded admin credentials in the collection Variables tab.\n3. Select **01 — Guided Full API Test** and click **Run**.\n4. Keep the saved request order. The first request creates a fresh test identity and clears old runtime tokens.\n5. Review the test summary. The guided folder covers operations, registration, password login, JWT authorization, refresh rotation and replay rejection, logout, admin authorization, CSRF, CORS, and WebAuthn option endpoints.\n\n## Run one API at a time\n\nOpen any request and read its **Docs** description. Each request states its prerequisites, expected result, and variables it saves. For protected endpoints, run the relevant login request first or paste a token into the collection Variables tab.\n\n## Generated and saved values\n\nWith `autoGenerateUser=true`, the collection creates a unique `username` and `email`. Login, refresh, admin login, and CSRF requests automatically save their returned values. Runtime token variables intentionally start empty.\n\n## Browser-only passkey operations\n\nThe **02 — Browser Passkey Templates** folder contains every remaining WebAuthn endpoint. These templates are skipped unless `runBrowserRequests=true`, because Postman cannot call `navigator.credentials.create()` or `navigator.credentials.get()`. Paste authenticator output captured by a browser before sending them.\n\nThe collection uses safe local demo values only. Do not store production passwords, secrets, access tokens, or refresh tokens in a shared collection.",
+    "description": "# AuthKit-Lite API — Human Test Suite\n\nUse this collection in either of two ways:\n\n## Run every automatable API as one workflow\n\n1. Start AuthKit-Lite with the `dev` profile and a MySQL database.\n2. Confirm `baseUrl` and the seeded admin credentials in the collection Variables tab.\n3. Select **01 — Guided Full API Test** and click **Run**.\n4. Keep the saved request order. The first request creates a fresh test identity and clears old runtime tokens.\n5. Review the test summary. The guided folder covers operations, registration, password login, JWT authorization, refresh rotation and replay rejection, logout, admin authorization, CSRF, CORS, and WebAuthn option endpoints.\n\n## Run one API at a time\n\nOpen any request and read its **Docs** description. Each request states its prerequisites, expected result, and variables it saves. For protected endpoints, run the relevant login request first or paste a token into the collection Variables tab.\n\n## Generated and saved values\n\nWith `autoGenerateUser=true`, the collection creates a unique `username` and `email`. Login, refresh, admin login, and CSRF requests automatically save their returned values. Runtime token variables intentionally start empty.\n\n## Browser-only passkey operations\n\nThe **02 — Browser Passkey Templates** folder contains every remaining WebAuthn endpoint. These templates are skipped unless `runBrowserRequests=true`, because Postman cannot call `navigator.credentials.create()` or `navigator.credentials.get()`. Paste authenticator output captured by a browser before sending them.\n\nLogout invalidates the refresh-token session; an already-issued stateless access token remains valid until its configured expiration.\n\nThe collection uses safe local demo values only. Do not store production passwords, secrets, access tokens, or refresh tokens in a shared collection.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "event": [
@@ -158,7 +158,7 @@
   "item": [
     {
       "name": "00 — Read Me First",
-      "description": "# Quick start\n\n## Combined test\n\nSelect **01 — Guided Full API Test**, click **Run**, keep the displayed order, and start the run. Use a fresh or reusable local database; unique normal-user credentials are generated for every run.\n\nThe administrator requests expect the development seed account. Start the application with:\n\n```bash\n./mvnw spring-boot:run -Dspring-boot.run.profiles=dev\n```\n\n## Individual API test\n\n1. Open a request.\n2. Read its Docs panel.\n3. Satisfy the listed prerequisite request or enter the needed collection variable.\n4. Click **Send**.\n\nTypical setup requests:\n\n- Normal-user JWT: **02 · Registration & Password Login → Login normal user and save tokens**\n- Administrator JWT: **05 · Administrator APIs → Login administrator and save tokens**\n- WebAuthn CSRF/session: **06 · WebAuthn Options, CSRF & CORS → Obtain WebAuthn CSRF token and cookie**\n\n## Reset\n\nRun **01 · Start a new test run** to create another unique normal user and clear saved runtime values. Postman's cookie jar should remain enabled for WebAuthn requests.",
+      "description": "# Quick start\n\n## Combined test\n\nSelect **01 — Guided Full API Test**, click **Run**, keep the displayed order, and start the run. Use a fresh or reusable local database; unique normal-user credentials are generated for every run.\n\nThe administrator requests use the seed account created by the default configuration. Start the application with:\n\n```bash\n./mvnw spring-boot:run\n```\n\n## Individual API test\n\n1. Open a request.\n2. Read its Docs panel.\n3. Satisfy the listed prerequisite request or enter the needed collection variable.\n4. Click **Send**.\n\nTypical setup requests:\n\n- Normal-user JWT: **02 · Registration & Password Login → Login normal user and save tokens**\n- Administrator JWT: **05 · Administrator APIs → Login administrator and save tokens**\n- WebAuthn CSRF/session: **06 · WebAuthn Options, CSRF & CORS → Obtain WebAuthn CSRF token and cookie**\n\n## Reset\n\nRun **01 · Start a new test run** to create another unique normal user and clear saved runtime values. Postman's cookie jar should remain enabled for WebAuthn requests.",
       "item": []
     },
     {
@@ -1010,7 +1010,7 @@
                     "logout"
                   ]
                 },
-                "description": "### Purpose\n\nRevokes the current normal-user refresh token. The access token authenticates the logout request.\n\n### Prerequisites\n\nCurrent accessToken and refreshToken.\n\n### Expected result\n\n200 logout confirmation.\n\n### Variables saved\n\nNothing.",
+                "description": "### Purpose\n\nRevokes the current normal-user refresh token. The access token authenticates the logout request and remains valid until its configured expiration.\n\n### Prerequisites\n\nCurrent accessToken and refreshToken.\n\n### Expected result\n\n200 logout confirmation.\n\n### Variables saved\n\nNothing.",
                 "auth": {
                   "type": "bearer",
                   "bearer": [
@@ -1121,7 +1121,7 @@
                     "login"
                   ]
                 },
-                "description": "### Purpose\n\nAuthenticates the administrator seeded by the dev profile.\n\n### Prerequisites\n\nApplication started with dev profile, or admin variables replaced with valid credentials.\n\n### Expected result\n\n200 with administrator access and refresh tokens.\n\n### Variables saved\n\nadminAccessToken and adminRefreshToken.",
+                "description": "### Purpose\n\nAuthenticates the administrator created by default demo-data seeding.\n\n### Prerequisites\n\nApplication started with demo-data seeding enabled, or admin variables replaced with valid credentials.\n\n### Expected result\n\n200 with administrator access and refresh tokens.\n\n### Variables saved\n\nadminAccessToken and adminRefreshToken.",
                 "auth": {
                   "type": "noauth"
                 }
@@ -1473,7 +1473,7 @@
                     "logout"
                   ]
                 },
-                "description": "### Purpose\n\nRevokes the administrator refresh token.\n\n### Prerequisites\n\nadminAccessToken and adminRefreshToken populated by admin login.\n\n### Expected result\n\n200 logout confirmation.\n\n### Variables saved\n\nNothing.",
+                "description": "### Purpose\n\nRevokes the administrator refresh token. The already-issued access token remains valid until its configured expiration.\n\n### Prerequisites\n\nadminAccessToken and adminRefreshToken populated by admin login.\n\n### Expected result\n\n200 logout confirmation.\n\n### Variables saved\n\nNothing.",
                 "auth": {
                   "type": "bearer",
                   "bearer": [

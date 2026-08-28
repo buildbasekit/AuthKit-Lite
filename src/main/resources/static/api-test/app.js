@@ -1,6 +1,6 @@
 "use strict";
 
-const SERVER_CONSOLE_URL = "http://localhost:8080/api-test/index.html";
+const SERVER_CONSOLE_URL = "http://localhost:8080/api-test";
 
 if (window.location.protocol === "file:") {
   window.addEventListener("DOMContentLoaded", async () => {
@@ -194,7 +194,7 @@ function initializeConsole() {
       elements.warning.textContent = "This browser does not expose WebAuthn. The core API controls still work, but passkey buttons require a current WebAuthn-capable browser with an available authenticator.";
     } else if (!secure || window.location.hostname !== "localhost") {
       elements.warning.hidden = false;
-      elements.warning.textContent = "Passkeys require a trustworthy localhost/HTTPS page whose hostname matches the configured RP ID (localhost). Open http://localhost:8080/api-test/index.html.";
+      elements.warning.textContent = "Passkeys require a trustworthy localhost/HTTPS page whose hostname matches the configured RP ID (localhost). Open http://localhost:8080/api-test.";
     } else if (!sameOrigin) {
       elements.warning.hidden = false;
       elements.warning.textContent = "This base URL is cross-origin. Add this page origin to authkit.passkey.allowed-origins, or use the same application origin.";

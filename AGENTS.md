@@ -20,10 +20,10 @@ Keep the existing `CONTRIBUTING.md` for human contributors. Do not replace it.
 ## 1. Repository Snapshot
 
 - **Application type:** Spring Boot REST API
-- **Language:** Java 26
+- **Language:** Java 25 LTS
 - **Build tool:** Maven
 - **Primary package:** `com.auth`
-- **Database:** MySQL through Spring Data JPA
+- **Database:** In-memory H2 by default; MySQL supported through Spring Data JPA
 - **Security model:** Stateless JWT access tokens + refresh tokens
 - **Authorization model:** Role-based access control using Spring Security authorities
 - **Current roles:** `ROLE_USER`, `ROLE_ADMIN`
@@ -99,27 +99,20 @@ src/test/java/com/auth/
 
 ## 4. Local Commands
 
-Use the Maven wrapper if it exists in the local clone. If this repository does not include a wrapper, use system Maven.
+Use the Maven wrapper included in the repository.
 
 ```bash
 # Run tests
-mvn test
+./mvnw test
 
 # Run the app
-mvn spring-boot:run
+./mvnw spring-boot:run
 
 # Package without tests
-mvn -DskipTests package
+./mvnw -DskipTests package
 
 # Full verification before a PR
-mvn clean test
-```
-
-If a future contributor adds `mvnw` / `mvnw.cmd`, prefer:
-
-```bash
-./mvnw clean test
-./mvnw spring-boot:run
+./mvnw clean verify
 ```
 
 ---
@@ -194,7 +187,7 @@ These are not blockers for normal development, but AI agents should keep them vi
 
 ### 7.1 Demo Credentials
 
-`DemoDataInitializer` creates default roles and demo users if the `dev` profile is active. This is useful for local development, but should never be enabled in production.
+`DemoDataInitializer` creates demo users on startup when it is enabled and the connected database has no users. This is useful for local development, but `authkit.demo-data.enabled` must be disabled in production.
 
 ### 7.2 Browser WebAuthn Verification
 

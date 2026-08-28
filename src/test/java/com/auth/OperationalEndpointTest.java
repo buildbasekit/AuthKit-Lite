@@ -10,6 +10,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -43,6 +44,10 @@ class OperationalEndpointTest {
 
 	@Test
 	void browserApiTestConsoleIsPublicButScopeRemainsNarrow() throws Exception {
+		mockMvc.perform(get("/api-test"))
+				.andExpect(status().isFound())
+				.andExpect(redirectedUrl("/api-test/index.html"));
+
 		mockMvc.perform(get("/api-test/index.html"))
 				.andExpect(status().isOk())
 				.andExpect(content().contentTypeCompatibleWith("text/html"))

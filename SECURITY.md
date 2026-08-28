@@ -1,52 +1,75 @@
 # Security Model
 
-This document outlines the security architecture and guarantees of AuthKit-Lite. 
+This document describes the protections AuthKit-Lite implements and the controls a production deployment must provide.
 
-## Authentication & Authorization
-- **Passwords**: Passwords are hashed using **BCrypt** with an appropriate work factor (managed via Spring Security's `PasswordEncoder`). Passwords are never logged or returned in DTOs.
-- **Minimum Password Policy**: The baseline requirement for registration is a 12-character passphrase.
-- **JWT (JSON Web Token)**: 
-  - Access tokens are stateless, signed using **HMAC SHA-256 (HS256)**, and short-lived (e.g., 15 minutes).
-  - Validation includes signature verification, expiry time, `issuer` matching, and `audience` matching.
-  - The JWT secret must be at least 32 characters long. The application enforces this at startup.
-- **Passkeys / WebAuthn**:
-  - The application relies entirely on Spring Security's native WebAuthn implementation for handling cryptographic assertions.
-  - No biometric data is ever sent, processed, or stored by the application. The authenticator handles user verification locally.
-  - The WebAuthn configuration implements strict Relaying Party (RP) ID validation to prevent phishing.
-  - Registration and credential deletion require JWT authentication plus Spring Security CSRF/session state. Authentication options and assertion submission are public but remain CSRF-protected.
+## Passwords and Accounts
 
-## Refresh Tokens & Session Lifecycle
-- **Refresh Token Hashing**: Refresh tokens are opaque cryptographically secure random bytes sent to the client as URL-safe Base64 strings. We **do not store the raw token in the database**. Instead, we store a **SHA-256 hash** of the token. This prevents an attacker who compromises the database from hijacking active sessions.
-- **One Active Session**: AuthKit-Lite maintains one active refresh session per user. A new login replaces the user's previous refresh token.
-- **Token Rotation**: Every time a refresh token is used to obtain a new access token, it is immediately revoked and a new refresh token is issued. 
-- **Concurrency Protection**: Rotation takes a pessimistic write lock on the matching refresh-token row before consuming it. If concurrent requests present the same token, only one succeeds; waiting replays receive `401 Unauthorized` after the winner commits.
-- **Disabled Users**: Refresh token requests check if the associated user account is still enabled (`user.isEnabled()`). If disabled, the request is rejected and the token is revoked.
-- **Logout Revocation**: Logout atomically deletes the hashed refresh token from the database, permanently ending the session.
+- Registration requires a password of at least 12 characters.
+- Spring Security's delegating `PasswordEncoder` hashes passwords with BCrypt before persistence.
+- Passwords and password hashes are never returned by API DTOs and must never be logged.
+- Disabled users cannot log in or refresh a session.
 
-## Secrets Management
-- AuthKit-Lite strictly avoids hardcoded secrets. All sensitive configuration parameters (e.g., database credentials, JWT secrets) are loaded from environment variables (e.g. `${JWT_SECRET}`).
+## JWT Access Tokens
 
-## Development Data & Demo Users
-- The application includes an optional development profile (`dev`) that seeds demo users (`admin/password123123` and `user/password123123`) via `DemoDataInitializer`.
-- **Do not enable the `dev` profile in production.** The production profile only creates baseline roles (`ROLE_USER` and `ROLE_ADMIN`) using Flyway.
+- Access tokens are stateless JWTs signed with HMAC SHA-256 (HS256).
+- Validation covers the signature, expiry, configured issuer, and configured audience.
+- The signing secret is external configuration and must contain at least 32 characters; production deployments should use a high-entropy secret from a secret manager.
+- Access-token lifetime is controlled by `JWT_ACCESS_TOKEN_TTL` and defaults to 15 minutes.
+- Role authorities are read from the JWT `roles` claim and retain the `ROLE_USER` / `ROLE_ADMIN` naming used by Spring Security authorization.
 
-## Browser API Test Console
+Because access tokens are stateless, the application does not maintain an access-token denylist. A token that has already been issued remains valid until its expiration unless the signing secret changes.
 
-- All API testing frontend files are isolated in `src/main/resources/static/api-test/`. The fallback security chain denies `/api-test/**` by default; `application-dev.properties` enables it for the `dev` profile. Never run the `dev` profile or enable `AUTHKIT_TEST_CONSOLE_ENABLED` in production.
-- `/api-test/**` contains static development assets only. Enabling the console does not make any protected API or WebAuthn operation public; the normal JWT, role, CSRF, session, RP ID, origin, and credential-ownership checks still apply.
-- The console stores access and refresh tokens only in JavaScript memory. It does not write them to local storage, session storage, cookies, URLs, or logs, and response rendering redacts token values.
-- The console loads no remote JavaScript and sends requests only to the base URL selected by the user. Use it with local/demo accounts, not production credentials.
-- WebAuthn runs from the application-hosted `http://localhost:8080` origin. The local `file://` copy redirects there because opaque file origins are not valid relying-party origins.
-- The console may remain packaged because production access is denied by default. If it is enabled in a controlled environment, continue to use only non-production test credentials.
+## Refresh Tokens and Logout
 
-## Rate Limiting & Brute Force Protection (Deployment Responsibility)
-AuthKit-Lite focuses purely on standard token-based authentication. **It does not implement application-level distributed rate limiting.**
+- Refresh tokens are opaque random values. Only their SHA-256 hashes are stored in the database.
+- AuthKit-Lite maintains one active refresh-token session per user; a new password or passkey login replaces the previous refresh token.
+- Each successful refresh consumes the presented token and returns a new access/refresh pair.
+- Rotation uses a pessimistic database lock. Concurrent reuse of the same refresh token allows one winner; subsequent replay receives `401 Unauthorized`.
+- Expired refresh tokens are deleted when presented. A disabled user's refresh attempt is rejected and its token is deleted.
+- Logout idempotently deletes the supplied refresh-token hash and prevents that session from issuing more access tokens.
 
-Production deployments are responsible for applying rate limiting and brute force protection at the infrastructure edge:
-- API Gateway
-- Reverse Proxy (e.g., Nginx, Traefik)
-- Web Application Firewall (WAF)
-- Load Balancer
+Logout does not revoke an already-issued stateless access token. That access token remains valid until its configured expiration time.
 
-## Reporting Security Vulnerabilities
-This repository is a boilerplate. If you find a security vulnerability, please report it via standard GitHub issues or security advisories as per the repository maintainers' guidelines. Do not report issues related to your own deployed instances.
+## Authorization
+
+- `/api/auth/register`, `/api/auth/login`, and `/api/auth/refresh` are public.
+- Logout and all other `/api/**` endpoints require a valid Bearer token.
+- `GET /api/users` requires `ROLE_ADMIN`; user profile and passkey-list endpoints require authentication.
+- Actuator discovery, health, and info are public. Other unmatched routes are denied.
+
+## CORS and CSRF
+
+- Allowed origins come from `PASSKEY_ALLOWED_ORIGINS`; arbitrary origins are not reflected.
+- Credentials are allowed only for configured origins. Production origins should use HTTPS.
+- The Bearer-token `/api/**` chain is stateless and does not use browser cookies for authentication, so CSRF is disabled only for that chain.
+- WebAuthn operations use temporary HTTP-session ceremony state and Spring Security's cookie CSRF repository. State-changing WebAuthn requests require the matching CSRF cookie/header and ceremony session.
+
+## Passkeys / WebAuthn
+
+- Passkeys are disabled by default and can be enabled through application properties or `.env` overrides.
+- Spring Security performs WebAuthn option handling, challenge verification, cryptographic assertion verification, and credential ownership checks.
+- Credentials and user entities use Spring Security's JDBC repositories.
+- Registration and credential deletion require JWT authentication plus WebAuthn session/CSRF state. Authentication options and assertion submission are public but remain CSRF-protected.
+- The relying-party ID and allowed origins are validated configuration. Production values must match the deployed HTTPS hostname.
+- Authenticators perform biometric or PIN verification locally; the application does not receive or store biometric data.
+
+## Development Features
+
+- `DemoDataInitializer` is enabled by default for instant local startup and runs only when the connected database contains no users. Set `authkit.demo-data.enabled=false` (or `AUTHKIT_DEMO_DATA_ENABLED=false`) in every production environment.
+- The browser API test frontend and its static assets under `/api-test/**` are intentionally public and require no authentication. Opening the frontend does not grant access to protected API endpoints.
+- WebAuthn routes are denied when passkeys are disabled.
+- Protected requests initiated by the frontend retain their normal JWT, role, CSRF, origin, and credential-ownership checks.
+- Never enable demo-data seeding or use demo credentials in production.
+
+## Secrets and Deployment Responsibilities
+
+- `.env` is local-only and ignored. `.env.example` contains placeholders and safe defaults only.
+- Do not commit database credentials, JWT secrets, tokens, private keys, or production URLs containing credentials.
+- The generated default JWT secret is suitable only for a single local process and changes on restart. Production deployments must provide a stable `JWT_SECRET`.
+- Use HTTPS/TLS for every production request and store secrets in the deployment platform's secret manager.
+- AuthKit-Lite does not implement application-level rate limiting or distributed brute-force protection. Apply those controls at an API gateway, reverse proxy, load balancer, or web application firewall.
+- Back up and monitor the database, restrict database permissions, and align the platform's termination grace period with `SHUTDOWN_TIMEOUT`.
+
+## Reporting a Vulnerability
+
+Do not disclose vulnerability details in a public issue. Use the repository's private vulnerability-reporting or GitHub Security Advisory channel when available. If no private channel is published, contact the maintainers privately through their verified project profile before sharing reproduction details.
