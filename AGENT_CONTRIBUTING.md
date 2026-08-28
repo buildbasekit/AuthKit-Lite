@@ -25,7 +25,6 @@ Before running the project locally, install:
 - Java 25 LTS
 - Maven 3.9+
 - MySQL 8+ only when testing an external MySQL configuration
-- Docker Desktop or another Testcontainers-compatible Docker engine for tests
 - Git
 - An IDE such as IntelliJ IDEA, Eclipse, or VS Code
 

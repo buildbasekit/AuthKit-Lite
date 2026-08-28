@@ -8,7 +8,7 @@ AuthKit-Lite is a compact Spring Boot authentication boilerplate for REST APIs. 
 - Spring Security with OAuth2 Resource Server and native WebAuthn support
 - Spring Data JPA, Hibernate, H2/MySQL, and Flyway
 - BCrypt password hashing
-- Testcontainers with MySQL 8.4 for integration tests
+- In-memory H2 database for dependency-free integration tests
 
 ## Core Features
 
@@ -24,7 +24,6 @@ AuthKit-Lite is a compact Spring Boot authentication boilerplate for REST APIs. 
 
 - Java 25 LTS
 - MySQL 8.0 or later only when using an external MySQL database
-- Docker or another Testcontainers-compatible container runtime for tests
 - Git
 
 The Maven wrapper is included, so a system Maven installation is not required.
@@ -59,13 +58,13 @@ Flyway creates and migrates the in-memory H2 schema; Hibernate validates it and 
 
 ## Testing
 
-The integration suite starts an isolated MySQL 8.4 container and does not use the local development database.
+The integration suite uses an isolated in-memory H2 database and requires no Docker or external database.
 
 ```bash
 ./mvnw clean verify
 ```
 
-Tests cover registration, password login, JWT validation, refresh-token rotation and replay, concurrent refresh handling, logout, disabled users, RBAC, CORS, CSRF, actuator security, WebAuthn option/failure paths, and default development-tool isolation. A real browser/platform authenticator is still required to complete successful WebAuthn ceremonies.
+Tests cover registration, password login, JWT validation, refresh-token rotation and replay, concurrent refresh handling, logout, disabled users, RBAC, CORS, CSRF, actuator security, WebAuthn option/failure paths, and default H2 configuration. A real browser/platform authenticator is still required to complete successful WebAuthn ceremonies.
 
 ## API Overview
 

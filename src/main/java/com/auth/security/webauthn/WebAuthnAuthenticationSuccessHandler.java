@@ -42,6 +42,11 @@ public class WebAuthnAuthenticationSuccessHandler implements AuthenticationSucce
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found after WebAuthn authentication"));
 
+        if (!user.isEnabled()) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "User account is disabled");
+            return;
+        }
+
         TokenResponse tokenResponse = authenticationTokenService.createTokenResponse(user);
 
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);

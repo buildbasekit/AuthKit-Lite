@@ -79,6 +79,6 @@ To support modern passwordless authentication, AuthKit-Lite integrates Spring Se
 
 ## 6. Testing & Environment Isolation
 
-- **Testcontainers**: Tests use an isolated MySQL 8.4 container managed by Spring Boot 4.1.1's `@ServiceConnection` and Testcontainers 2 integration. This guarantees tests never pollute or depend on the developer's local database.
+- **H2 tests**: Tests use an isolated in-memory H2 database in MySQL compatibility mode. They require no Docker, external database, or developer-specific setup.
 - **MockMvc**: End-to-end integration tests use `MockMvc` to rigorously test API boundaries, assertions, validation, and JSON structures.
 - **Browser API Test Frontend**: BuildBaseKit-branded static HTML, CSS, JavaScript, and logo assets under `src/main/resources/static/api-test/` provide a public same-origin manual client at `/api-test` without adding a frontend runtime or dependency. A locally double-clicked `index.html` acts only as a launcher and redirects to the server-hosted `localhost` copy so WebAuthn has a valid RP origin. The client preserves WebAuthn ceremony state through the browser session cookie, sends the cookie-backed CSRF token, delegates credential creation/assertion to `navigator.credentials`, and keeps JWT/refresh tokens only in memory. Protected APIs retain their normal security rules.
