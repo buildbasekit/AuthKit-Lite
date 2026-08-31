@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.auth</groupId>
 	<artifactId>authkit-lite</artifactId>
-	<version>1.0.0</version>
+	<version>2.0.0</version>
 	<name>AuthKit-Lite</name>
 	<description>BuildBaseKit Spring Boot authentication boilerplate with JWT, refresh tokens, roles, and passkeys</description>
 	<url>https://buildbasekit.com/boilerplates/authkit-lite/</url>
