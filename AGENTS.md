@@ -55,44 +55,22 @@ Important: this repository already has a human-facing `CONTRIBUTING.md`. Do not 
 
 ```text
 src/main/java/com/auth/
-├── AuthKitApplication.java
 ├── config/
-│   └── DemoDataInitializer.java
-│   └── SecurityConfig.java
 ├── controllers/
-│   ├── AuthController.java
-│   └── UserController.java
 ├── dtos/
-│   ├── LoginRequest.java
-│   ├── RegisterRequest.java
-│   ├── UserProfileDto.java
-│   └── UserSummaryDto.java
 ├── entities/
-│   ├── RefreshToken.java
-│   ├── Role.java
-│   └── User.java
 ├── exceptions/
-│   ├── AccessDeniedBusinessException.java
-│   ├── EmailAlreadyExistsException.java
-│   ├── GlobalExceptionHandler.java
-│   ├── InvalidCredentialsException.java
-│   ├── RefreshTokenException.java
-│   └── UsernameAlreadyExistsException.java
 ├── repositories/
-│   ├── RefreshTokenRepository.java
-│   ├── RoleRepository.java
-│   └── UserRepository.java
 ├── security/
-│   ├── AuthService.java
-│   └── RefreshTokenService.java
 └── services/
-    └── UserService.java
 
 src/main/resources/
-└── application.properties
+├── application.properties
+├── db/migration/
+└── static/api-test/
 
 src/test/java/com/auth/
-└── AuthKitApplicationTests.java
+└── application, configuration, controller, and security tests
 ```
 
 ---
@@ -207,7 +185,7 @@ For every coding task:
 2. Read the existing implementation before editing.
 3. Make the smallest safe change.
 4. Add or update tests when behavior changes.
-5. Run at least `mvn test` when possible.
+5. Run at least `./mvnw test` when possible.
 6. Update documentation if endpoints, configuration, roles, or flows change.
 7. Report changed files, commands run, and remaining risks.
 
@@ -225,7 +203,7 @@ Changed files
 - path/to/File.java — short reason
 
 Validation
-- Command run: mvn test
+- Command run: ./mvnw test
 - Result: passed / failed / not run with reason
 
 Risk notes

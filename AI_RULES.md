@@ -16,21 +16,7 @@ An AI assistant must make focused, verifiable changes and must not introduce hid
 
 ## 2. Required Context Before Any Code Change
 
-Before editing, inspect:
-
-1. `README.md`
-2. `AGENTS.md`
-3. `ARCHITECTURE.md`
-4. `AI_RULES.md`
-5. `AGENT_CONTRIBUTING.md`
-6. `SECURITY.md`
-7. Existing human contributor guide: `CONTRIBUTING.md`
-8. `src/main/resources/application.properties`
-9. The exact affected source files
-
-Do not rely on assumptions from other Spring Boot projects.
-
-Do not overwrite the existing human-facing `CONTRIBUTING.md`. AI-agent workflow rules belong in `AGENT_CONTRIBUTING.md`.
+Follow the required reading order and documentation ownership in [`AGENTS.md`](AGENTS.md#2-read-these-before-editing). Do not rely on assumptions from other Spring Boot projects.
 
 ---
 
@@ -40,16 +26,7 @@ Do not overwrite the existing human-facing `CONTRIBUTING.md`. AI-agent workflow 
 
 Only use packages and patterns that exist unless the task explicitly requires a new package.
 
-Current top-level packages under `com.auth` are:
-
-- `config`
-- `controllers`
-- `dtos`
-- `entities`
-- `exceptions`
-- `repositories`
-- `security`
-- `services`
+Use the package map in [`AGENTS.md`](AGENTS.md#3-important-project-paths).
 
 ### 3.2 Keep Diffs Focused
 
@@ -59,7 +36,7 @@ Do not rename classes, packages, or endpoints without explicit instruction.
 
 ### 3.3 Preserve Stateless Security
 
-The app uses stateless JWT authentication via Spring Security Resource Server. Do not introduce server sessions, form login, or cookie-based auth unless the task explicitly asks for a new security model.
+The `/api/**` endpoints use stateless JWT authentication via Spring Security Resource Server. Do not introduce server sessions, form login, or cookie-based auth for these endpoints unless the task explicitly asks for a new security model. Preserve the existing WebAuthn ceremony state and CSRF protections.
 Never introduce a custom JWT bearer request filter. Never manually parse access JWTs.
 
 ### 3.4 Protect New Endpoints
@@ -148,23 +125,18 @@ A new dependency must have:
 - No overlap with existing Spring Boot capability
 - Documentation in the PR summary
 
-Preferred Spring-native additions for future improvements:
-
-- `spring-boot-starter-validation` for DTO validation
-- Flyway or Liquibase for database migrations
-
 Avoid adding large frameworks for small tasks.
 
 ---
 
 ## 5. API Rules
 
-When changing API behavior:
+Preserve existing API and security behavior unless the task explicitly requires a change. When changing API behavior:
 
 1. Update DTOs deliberately.
 2. Keep response shapes consistent.
 3. Avoid exposing entities directly.
-4. Update README or API documentation.
+4. Update the canonical API documentation on the BuildBaseKit website.
 5. Update the Postman collection if endpoint contracts change.
 6. Add tests for success and failure cases.
 
@@ -188,10 +160,10 @@ Add or update tests for:
 - Admin-only endpoints
 - Global exception responses
 
-Before completion, run:
+Use the Maven wrapper. Before completing code changes, run:
 
 ```bash
-mvn test
+./mvnw test
 ```
 
 If tests cannot be run, explicitly state why.
@@ -226,7 +198,7 @@ Preferred patterns:
 - Add tests around security behavior.
 - Introduce profiles for development and production configuration.
 - Keep demo seed data behind an explicit configuration property.
-- Replace `ddl-auto=update` with migrations when productionizing. Flyway owns schema changes. Hibernate validates the schema.
+- Flyway owns schema changes. Keep Hibernate in `validate` mode; never switch to `ddl-auto=update`.
 
 ---
 
@@ -236,8 +208,7 @@ Treat these as high-risk and call them out clearly:
 
 - Editing `SecurityConfig`
 - Changing `TokenService`
-- Editing `RefreshTokenService` (Keep refresh-token lifecycle application-owned)
-- Editing `RefreshTokenService`
+- Editing `RefreshTokenService` (keep refresh-token lifecycle application-owned and atomic)
 - Changing token expiry or signing behavior
 - Changing role names or authority mapping
 - Changing user-role entity relationships
@@ -264,42 +235,8 @@ Do not do these without explicit task requirements:
 
 ---
 
-## 11. AI Response Format After Making Changes
+## 11. Reporting and Completion
 
-Every AI coding response should include:
-
-```text
-Summary
-- Clear explanation of what changed.
-
-Changed files
-- File path — reason
-
-Validation
-- Command run
-- Result
-
-Security notes
-- Any auth, token, password, role, or config impact
-
-Follow-up
-- Any remaining work or recommended next step
-```
+Follow the [output format](AGENTS.md#9-output-format-for-ai-coding-work) and [definition of done](AGENTS.md#10-definition-of-done) in `AGENTS.md`.
 
 Do not claim tests passed unless they were actually run.
-
----
-
-## 12. Definition of Done for AI-Assisted Work
-
-A task is done only when:
-
-- The change is scoped to the request.
-- The implementation matches the architecture.
-- No secrets are introduced.
-- Security is not weakened.
-- New endpoints have explicit access rules.
-- Sensitive fields are not leaked.
-- Tests are added or updated for behavior changes.
-- `mvn test` passes or the reason for not running it is stated.
-- Documentation is updated when contracts or setup change.

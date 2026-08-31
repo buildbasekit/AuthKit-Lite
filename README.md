@@ -4,7 +4,7 @@ A minimal Spring Boot authentication foundation with JWT, refresh-token rotation
 
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.1-6DB33F?logo=springboot&logoColor=white)](https://buildbasekit.com/boilerplates/authkit-lite/)  
 [![Java](https://img.shields.io/badge/Java-25-ED8B00?logo=openjdk&logoColor=white)](https://buildbasekit.com/boilerplates/authkit-lite/)  
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://chatgpt.com/c/LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 [Website](https://buildbasekit.com/boilerplates/authkit-lite/) · [Docs](https://buildbasekit.com/docs/authkit/overview/) · [Changelog](https://buildbasekit.com/boilerplates/authkit-lite/changelog/)
 
@@ -54,15 +54,15 @@ Runs with H2 by default. No external database setup is required for the first ru
 
 ## Project context
 
-- [`AGENTS.md`](https://chatgpt.com/c/AGENTS.md)
+- [`AGENTS.md`](AGENTS.md)
 
-- [`AI_RULES.md`](https://chatgpt.com/c/AI_RULES.md)
+- [`AI_RULES.md`](AI_RULES.md)
 
-- [`ARCHITECTURE.md`](https://chatgpt.com/c/ARCHITECTURE.md)
+- [`ARCHITECTURE.md`](ARCHITECTURE.md)
 
-- [`CONTRIBUTING.md`](https://chatgpt.com/c/CONTRIBUTING.md)
+- [`CONTRIBUTING.md`](CONTRIBUTING.md)
 
-- [`SECURITY.md`](https://chatgpt.com/c/SECURITY.md)
+- [`SECURITY.md`](SECURITY.md)
 
 ## BuildBaseKit
 
@@ -70,4 +70,4 @@ AuthKit-Lite is part of [BuildBaseKit](https://buildbasekit.com/) — focused Sp
 
 ## License
 
-[MIT](https://chatgpt.com/c/LICENSE)
+[MIT](LICENSE)
